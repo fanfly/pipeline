@@ -5,6 +5,7 @@
 ```
 pipeline
 └── code
+		│
     │   # testbench and core
     ├── testbench.v
     ├── cpu.v
@@ -14,12 +15,17 @@ pipeline
     ├── instruction_memory.v
     ├── registers.v
     ├── data_memory.v
+    ├── adder.v
+    │
     ├── alu.v
     ├── alu_control.v
-    ├── sign_extend.v
     ├── control.v
-    ├── forward.v
-    ├── hazard_detect.v
+    ├── sign_extend.v
+    ├── shift_left.v
+    ├── check_equal.v
+    │
+    ├── forwarding_unit.v
+    ├── hazard_detection_unit.v
     ├── mux32.v
     └── mux5.v
 ```
