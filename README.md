@@ -5,7 +5,6 @@
 ```
 pipeline
 └── code
-    │
     │   # testbench and core
     ├── testbench.v
     ├── cpu.v
