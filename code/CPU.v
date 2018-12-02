@@ -169,7 +169,7 @@ ForwardingUnit ForwardingUnit(
     .EXMEMwb_i          (MEM_WB),
     .MEMWBinst_i        (WB_inst),
     .MEMWBwb_i          (WB_WB),
-    .rs1_i              (ID_inst[19:25]),
+    .rs1_i              (ID_inst[19:15]),
     .rs2_i              (ID_inst[24:20]),
     .MUXALU1control_o   (),
     .MUXALU2control_o   (),
