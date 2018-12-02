@@ -12,7 +12,7 @@ wire    [31:0]  IF_instaddr;
 wire    [31:0]  ID_instaddr, ID_inst, ID_option, sign_Extend;
 wire    [31:0]  EX_inst, EX_MUXALUdata2;
 wire    [31:0]  MEM_ALUdata, MEM_inst, MEM_WB;
-wire    [31:0]  WB_data, WB_WB;
+wire    [31:0]  WB_data, WB_WB, WB_inst;
 
 MUX_PC MUX_PC(
     .pc0_i      (Add_PC.data_o),
@@ -24,7 +24,7 @@ PC PC(
     .clk_i      (clk_i),
     .start_i    (start_i),
     .pc_i       (MUX_PC.pc_o),
-    .PCflush_i  (HazzardDetection.PCflush_o)
+    .PCflush_i  (HazzardDetection.PCflush_o),
     .pc_o       (IF_instaddr)
 );
 
@@ -44,7 +44,7 @@ Instruction_Memory Instruction_Memory(
 IFID_pipeline IFID_pipeline(
     .clk_i          (clk_i),
     .start_i        (start_i),
-    .hazzardflush_i  (HazzardDetection.IFIDflush_o),
+    .hazzardflush_i (HazzardDetection.IFIDflush_o),
     .controlflush_i (Control.IFID_flush),
     .instaddr_i     (PC.pc_o),
     .inst_i         (Instruction_Memory.inst_o),
@@ -55,10 +55,10 @@ IFID_pipeline IFID_pipeline(
 HazzardDetection HazzardDetection(
     .IFIDinst_i     (ID_inst),
     .IDEXinst_i     (EX_inst),
-    .hazzardflush_i  (IDEX_pipeline.hazzardflush_o)
+    .hazzardflush_i (IDEX_pipeline.hazzardflush_o),
     .PCflush_o      (),
     .IFIDflush_o    (),
-    .instflush_o    ()
+    .instflush_o    (),
     .mux8_o         (),
     .Flush_o        ()
 );
@@ -84,7 +84,7 @@ Add_Branch Add_Branch(
 Registers Registers(
     .rs1_i          (ID_inst[19:25]),
     .rs2_i          (ID_inst[24:20]),
-    .writeaddr_i    (MEMWB_pipeline.writeReigister_o),
+    .writeaddr_i    (WB_inst),
     .writedata_i    (WB_data),
     .RegWrite_i     (WB_WB)
     .data1_o        (),
@@ -167,7 +167,7 @@ ALU ALU(
 ForwardingUnit ForwardingUnit(
     .EXMEMinst_i        (MEM_inst),
     .EXMEMwb_i          (MEM_WB),
-    .MEMWBinst_i        (MEMWB_pipeline.inst_o),
+    .MEMWBinst_i        (WB_inst),
     .MEMWBwb_i          (WB_WB),
     .rs1_i              (ID_inst[19:25]),
     .rs2_i              (ID_inst[24:20]),
@@ -206,16 +206,16 @@ MEMWB_pipeline MEMWB_pipeline(
     .data_i         (DataMemory.readData_o),
     .ALUdata_i      (MEM_ALUdata),
     .inst_i         (MEM_inst),
-    .WB_o           (WB_WB)
+    .WB_o           (WB_WB),
     .data_o         (),
     .ALUdata_o      (),
-    .writeReigister_o   ()
+    .inst_o         (WB_inst)
 );
 
 MUX_WB MUX_WB(
     .MemtoReg_i     (WB_WB),
     .data_i         (MEMWB_pipeline.data_o),
-    .ALUdata_i      (MEMWB_pipeline.ALUdata_o)
+    .ALUdata_i      (MEMWB_pipeline.ALUdata_o);
     .writedata_o    (WB_data)
 );
 
