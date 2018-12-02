@@ -12,9 +12,10 @@ module MEMWB_pipeline
     inst_o
 );
 
-input			clk_i, start_i, WB_i;
+input			clk_i, start_i;
+input	[2:0]	WB_i;
 input	[31:0]	data_i, ALUdata_i, inst_i;
-output	reg				WB_o;
+output	reg		[2:0]	WB_o;
 output	reg 	[31:0]	data_o, ALUdata_o, inst_o;
 
 always @(posedge clk_i) begin
