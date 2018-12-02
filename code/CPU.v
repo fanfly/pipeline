@@ -5,14 +5,17 @@ module CPU
 );
 
 // Ports
-input               clk_i;
-input               start_i;
+input   clk_i;
+input   start_i;
 
 wire    [31:0]  IF_instaddr;
-wire    [31:0]  ID_instaddr, ID_inst, ID_option, sign_Extend;
+wire    [31:0]  ID_instaddr, ID_inst, ID_signExtend;
 wire    [31:0]  EX_inst, EX_MUXALUdata2;
-wire    [31:0]  MEM_ALUdata, MEM_inst, MEM_WB;
-wire    [31:0]  WB_data, WB_WB, WB_inst;
+wire    [1:0]   MEM_WB;
+wire    [2:0]   MEM_M;
+wire    [31:0]  MEM_ALUdata, MEM_inst;
+wire    [1:0]   WB_WB;
+wire    [31:0]  WB_data, WB_inst;
 
 MUX_PC MUX_PC(
     .pc0_i      (Add_PC.data_o),
@@ -76,7 +79,7 @@ Control Control(
 );
 
 Add_Branch Add_Branch(
-    .data_i     (sign_Extend),
+    .data_i     (ID_signExtend),
     .instaddr_i (ID_instaddr),
     .data_o     ()
 );
@@ -86,14 +89,14 @@ Registers Registers(
     .rs2_i          (ID_inst[24:20]),
     .writeaddr_i    (WB_inst),
     .writedata_i    (WB_data),
-    .RegWrite_i     (WB_WB)
+    .RegWrite_i     (WB_WB[1])
     .data1_o        (),
     .data2_o        ()
 );
 
 ImmGen ImmGen(
     .data_i     (IFID_pipeline.inst_o),
-    .data_o     (sign_Extend)
+    .data_o     (ID_signExtend)
 );
 
 MUX_IDEX MUX_IDEX(
@@ -101,7 +104,9 @@ MUX_IDEX MUX_IDEX(
     .IDflush_i      (Control.IDflush_o),
     .inst_i         (Control.inst_o),
     .zero_i         (32'd0),
-    .Option_o       (ID_option)
+    .WB_o           (),
+    .M_o            (),
+    .EX_o           ()
 );  
 
 /*------------ ID/EX ------------*/
@@ -115,7 +120,7 @@ IDEX_pipeline IDEX_pipeline(
     .instaddr_i     (ID_instaddr),
     .data1_i        (Registers.data1_o),
     .data2_i        (Registers.data2_o),
-    .sign_Extend_i  (sign_Extend),
+    .sign_Extend_i  (ID_signExtend),
     .rs1_i          (ID_inst[19:25]),
     .rs2_i          (ID_inst[24:20]),
     .inst_i         (ID_inst),
@@ -143,7 +148,7 @@ MUX_EXMEM2 MUX_EXMEM2(
 );
 
 MUX_ALU1 MUX_ALU1(
-    .control_i  (ForwardingUnit.MUXALU1control_o),
+    .ALUSrc     (ForwardingUnit.MUXALU1control_o),
     .data1_i    (IDEX_pipeline.data1_i),
     .dataWB_i   (WB_data),
     .dataFor_i  (MEM_ALUdata),
@@ -151,7 +156,7 @@ MUX_ALU1 MUX_ALU1(
 );
 
 MUX_ALU2 MUX_ALU2(
-    .control_i  (ForwardingUnit.MUXALU2control_o),
+    .ALUSrc     (ForwardingUnit.MUXALU2control_o),
     .data2_i    (IDEX_pipeline.data2_i),
     .dataWB_i   (WB_data),
     .dataFor_i  (MEM_ALUdata),
@@ -186,12 +191,15 @@ EXMEM_pipeline EXMEM_pipeline(
     .MUXALUdata2_i  (EX_MUXALUdata2),
     .inst_i         (EX_inst),
     .WB_o           (MEM_WB),
+    .M_o            (MEM_M),
     .ALUdata_o      (MEM_ALUdata),
     .MUXALUdata2_o  (),
     .inst_o         (MEM_inst)
 );
 
 DataMemory DataMemory(
+    .MemRead        (MEM_M[1])
+    .MemWrite       (MEM_M[0]),
     .ALUdata_i      (MEM_ALUdata),
     .MUXALUdata2_i  (EXMEM_pipeline.MUXALUdata2_o),
     .readData_o     ()
@@ -213,7 +221,7 @@ MEMWB_pipeline MEMWB_pipeline(
 );
 
 MUX_WB MUX_WB(
-    .MemtoReg_i     (WB_WB),
+    .MemtoReg_i     (WB_WB[0]),
     .data_i         (MEMWB_pipeline.data_o),
     .ALUdata_i      (MEMWB_pipeline.ALUdata_o);
     .writedata_o    (WB_data)
