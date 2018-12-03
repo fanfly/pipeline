@@ -19,10 +19,18 @@ output	reg		[2:0]	WB_o;
 output	reg 	[31:0]	data_o, ALUdata_o, inst_o;
 
 always @(posedge clk_i) begin
-	WB_o = WB_i;
-	data_o = data_i;
-	ALUdata_o = ALUdata_il;
-	inst_o = inst_i;
+	if (start_i) begin
+		WB_o = WB_i;
+		data_o = data_i;
+		ALUdata_o = ALUdata_i;
+		inst_o = inst_i;
+	end
+	else begin
+		WB_o = WB_o;
+		data_o = data_o;
+		ALUdata_o = ALUdata_o;
+		inst_o = inst_o;
+	end
 end
 
 endmodule
