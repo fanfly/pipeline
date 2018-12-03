@@ -26,10 +26,10 @@ always @(posedge clk_i) begin
 		inst_o = inst_i;
 	end
 	else begin
-		WB_o = WB_o;
-		data_o = data_o;
-		ALUdata_o = ALUdata_o;
-		inst_o = inst_o;
+		WB_o = 32'b0;
+		data_o = 32'b0;
+		ALUdata_o = 32'b0;
+		inst_o = 32'b0;
 	end
 end
 
