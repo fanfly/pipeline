@@ -57,18 +57,19 @@ IFID_pipeline IFID_pipeline(
     .inst_o         (ID_inst)
 )
 
-Add_Branch Add_Branch(
-    .data1_i    (ID_data1),
-    .data2_i    (ID_data2),
-    .data_o     ()
-);
-
 ImmGen ImmGen(
     .data_i     (IFID_pipeline.inst_o),
     .data_o     (ID_signExtend)
 );
 
+Add_Branch Add_Branch(
+    .data1_i    (ID_signExtend),
+    .data2_i    (ID_instaddr),
+    .data_o     ()
+);
+
 Registers Registers(
+    .clk_i          (clk_i),
     .rs1_i          (ID_inst[19:25]),
     .rs2_i          (ID_inst[24:20]),
     .writeaddr_i    (WB_inst),
@@ -110,11 +111,11 @@ MUX_IDEX MUX_IDEX(
     .WB_i           (Control.WB_o),
     .M_i            (Control.M_o)
     .EX_i           (Control.EX_o)
-    .zero_i         (32'd0),
+    .zero_i         (2'd0),
     .WB_o           (),
     .M_o            (),
     .EX_o           ()
-);  
+);
 
 /*------------ ID/EX ------------*/
 
