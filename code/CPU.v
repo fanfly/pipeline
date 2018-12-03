@@ -9,7 +9,7 @@ input   clk_i;
 input   start_i;
 
 wire    [31:0]  IF_instaddr;
-wire    [31:0]  ID_instaddr, ID_inst, ID_signExtend;
+wire    [31:0]  ID_instaddr, ID_inst, ID_signExtend, ID_data1, ID_data2;
 wire    [31:0]  EX_inst, EX_MUXALUdata2;
 wire    [1:0]   MEM_WB;
 wire    [2:0]   MEM_M;
@@ -78,20 +78,23 @@ Control Control(
     .Branch_o   ()
 );
 
-Add_Branch Add_Branch(
-    .data_i     (ID_signExtend),
-    .instaddr_i (ID_instaddr),
-    .data_o     ()
-);
-
 Registers Registers(
     .rs1_i          (ID_inst[19:25]),
     .rs2_i          (ID_inst[24:20]),
     .writeaddr_i    (WB_inst),
     .writedata_i    (WB_data),
     .RegWrite_i     (WB_WB[1])
-    .data1_o        (),
-    .data2_o        ()
+    .data1_o        (ID_data1),
+    .data2_o        (ID_data2)
+);
+
+Add_Branch Add_Branch(
+    .inst_i     (ID_inst),
+    .data1_i    (ID_data1),
+    .data2_i    (ID_data2),
+    .data_i     (ID_signExtend),
+    .instaddr_i (ID_instaddr),
+    .data_o     ()
 );
 
 ImmGen ImmGen(
@@ -118,8 +121,8 @@ IDEX_pipeline IDEX_pipeline(
     .M_i            (Control.M_o),
     .EX_i           (Control.EX_o),
     .instaddr_i     (ID_instaddr),
-    .data1_i        (Registers.data1_o),
-    .data2_i        (Registers.data2_o),
+    .data1_i        (ID_data1),
+    .data2_i        (ID_data2),
     .sign_Extend_i  (ID_signExtend),
     .rs1_i          (ID_inst[19:25]),
     .rs2_i          (ID_inst[24:20]),
