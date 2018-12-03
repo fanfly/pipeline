@@ -10,14 +10,16 @@ input   start_i;
 
 wire    [31:0]  IF_instaddr;
 wire    [31:0]  ID_instaddr, ID_inst, ID_signExtend, ID_data1, ID_data2;
+wire    [1:0]   EX_M;
 wire    [31:0]  EX_inst, EX_MUXALUdata2;
 wire    [1:0]   MEM_WB;
-wire    [2:0]   MEM_M;
+wire    [1:0]   MEM_M;
 wire    [31:0]  MEM_ALUdata, MEM_inst;
 wire    [1:0]   WB_WB;
 wire    [31:0]  WB_data, WB_inst;
 
 MUX_PC MUX_PC(
+    .Branch_i   (Control.Branch_o),
     .pc0_i      (Add_PC.data_o),
     .pc1_i      (Add_Branch.data_o),
     .pc_o       ()
@@ -55,27 +57,15 @@ IFID_pipeline IFID_pipeline(
     .inst_o         (ID_inst)
 )
 
-HazzardDetection HazzardDetection(
-    .IFIDinst_i     (ID_inst),
-    .IDEXinst_i     (EX_inst),
-    .hazzardflush_i (IDEX_pipeline.hazzardflush_o),
-    .PCflush_o      (),
-    .IFIDflush_o    (),
-    .instflush_o    (),
-    .mux8_o         (),
-    .Flush_o        ()
+Add_Branch Add_Branch(
+    .data1_i    (ID_data1),
+    .data2_i    (ID_data2),
+    .data_o     ()
 );
 
-Control Control(
-    .inst_i     (ID_inst),
-    .IFflush_o  (),
-    .IDflush_o  (),
-    .EXflush_o  (),
-    .WB_o       (),
-    .M_o        (),
-    .EX_o       (),
-    .Jump_o     (),
-    .Branch_o   ()
+ImmGen ImmGen(
+    .data_i     (IFID_pipeline.inst_o),
+    .data_o     (ID_signExtend)
 );
 
 Registers Registers(
@@ -88,24 +78,38 @@ Registers Registers(
     .data2_o        (ID_data2)
 );
 
-Add_Branch Add_Branch(
-    .Branch_i   (Control.Branch_o),
-    .data1_i    (ID_data1),
-    .data2_i    (ID_data2),
-    .data_i     (ID_signExtend),
-    .instaddr_i (ID_instaddr),
-    .data_o     ()
+HazzardDetection HazzardDetection(
+    .IFIDinst_i     (ID_inst),
+    .IDEXinst_i     (EX_inst),
+    .hazzardflush_i (EX_M),
+    .PCflush_o      (),
+    .IFIDflush_o    (),
+    .MUXflush_o     (),
+    .mux8_o         (),
+    .Flush_o        ()
 );
 
-ImmGen ImmGen(
-    .data_i     (IFID_pipeline.inst_o),
-    .data_o     (ID_signExtend)
+Control Control(
+    .inst_i     (ID_inst),
+    .data1_i    (ID_data1),
+    .data2_i    (ID_data2),
+    .IFflush_o  (),
+    .IDflush_o  (),
+    .EXflush_o  (),
+    .MUXflush_o (),
+    .WB_o       (),
+    .M_o        (),
+    .EX_o       (),
+    .Jump_o     (),
+    .Branch_o   ()
 );
 
 MUX_IDEX MUX_IDEX(
-    .instflush_i    (HazzardDetection.instflush_o),
+    .hazzardflush_i (HazzardDetection.MUXflush_o),
     .IDflush_i      (Control.IDflush_o),
-    .inst_i         (Control.inst_o),
+    .WB_i           (Control.WB_o),
+    .M_i            (Control.M_o)
+    .EX_i           (Control.EX_o)
     .zero_i         (32'd0),
     .WB_o           (),
     .M_o            (),
@@ -117,9 +121,9 @@ MUX_IDEX MUX_IDEX(
 IDEX_pipeline IDEX_pipeline(
     .clk_i          (clk_i),
     .start_i        (start_i),
-    .WB_i           (Control.WB_o),
-    .M_i            (Control.M_o),
-    .EX_i           (Control.EX_o),
+    .WB_i           (MUX_IDEX.WB_o),
+    .M_i            (MUX_IDEX.M_o),
+    .EX_i           (MUX_IDEX.EX_o),
     .instaddr_i     (ID_instaddr),
     .data1_i        (ID_data1),
     .data2_i        (ID_data2),
@@ -128,7 +132,7 @@ IDEX_pipeline IDEX_pipeline(
     .rs2_i          (ID_inst[24:20]),
     .inst_i         (ID_inst),
     .WB_o           (),
-    .M_o            (),
+    .M_o            (EX_M),
     .EX_o           (),
     .data1_o        (),
     .data2_o        (),
@@ -146,7 +150,7 @@ MUX_EXMEM1 MUX_EXMEM1(
 
 MUX_EXMEM2 MUX_EXMEM2(
     .control_i  (Control.EXflush_o),
-    .M_i        (IDEX_pipeline.M_o),
+    .M_i        (EX_M),
     .zero_i     (32'd0),
     .M_o        ()
 );
