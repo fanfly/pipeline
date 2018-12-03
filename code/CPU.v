@@ -126,6 +126,7 @@ IDEX_pipeline IDEX_pipeline(
     .inst_i         (ID_inst),
     .WB_o           (),
     .M_o            (),
+    .EX_o           (),
     .data1_o        (),
     .data2_o        (),
     .rs1_o          (),
@@ -164,6 +165,7 @@ MUX_ALU2 MUX_ALU2(
 );
 
 ALU ALU(
+    .ALUOp      (IDEX_pipeline.EX_o)
     .data1_i    (MUX_ALU1.data1_o),
     .data2_i    (EX_MUXALUdata2),
     .data_o     (),

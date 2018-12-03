@@ -2,31 +2,41 @@
 
 ## Structure
 
+![pipeline](https://i.imgur.com/3haUhuz.jpg)
+
 ```
 pipeline
 └── code
     │   # testbench and core
     ├── testbench.v
-    ├── cpu.v
+    ├── CPU.v
     │
     │   # modules
-    ├── pc.v
-    ├── instruction_memory.v
-    ├── registers.v
-    ├── data_memory.v
-    ├── adder.v
+    ├── MUX_PC.v
+    ├── PC.v
+    ├── Add_PC.v
+    ├── Instruction_memory.v
     │
-    ├── alu.v
-    ├── alu_control.v
-    ├── control.v
-    ├── sign_extend.v
-    ├── shift_left.v
-    ├── check_equal.v
+    ├── IFID_pipeline.v
+    ├── HazzardDetection.v
+    ├── Control.v
+    ├── MUX_IDEX.v
+    ├── Add_Branch.v
+    ├── Register.v
+    ├── ImmGem.v
     │
-    ├── forwarding_unit.v
-    ├── hazard_detection_unit.v
-    ├── mux32.v
-    └── mux5.v
+    ├── IDEX_pipeline.v
+    ├── MUX_ALU1.v
+    ├── MUX_ALU2.v
+    ├── MUX_EXMEM1.v
+    ├── MUX_EXMEM2.v
+    ├── ALU.v
+    ├── Forwarding.v
+    │
+    ├── EXMEM_pipeline.v
+    ├── DataMemory.v
+    ├── MEMWB_pipeline.v
+    └── MUX_WB.v
 ```
 
 ## Instructions
