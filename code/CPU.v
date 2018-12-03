@@ -89,7 +89,7 @@ Registers Registers(
 );
 
 Add_Branch Add_Branch(
-    .inst_i     (ID_inst),
+    .Branch_i   (Control.Branch_o),
     .data1_i    (ID_data1),
     .data2_i    (ID_data2),
     .data_i     (ID_signExtend),
@@ -152,7 +152,7 @@ MUX_EXMEM2 MUX_EXMEM2(
 );
 
 MUX_ALU1 MUX_ALU1(
-    .ALUSrc     (ForwardingUnit.MUXALU1control_o),
+    .ALUSrc_i   (ForwardingUnit.MUXALU1control_o),
     .data1_i    (IDEX_pipeline.data1_i),
     .dataWB_i   (WB_data),
     .dataFor_i  (MEM_ALUdata),
@@ -160,7 +160,7 @@ MUX_ALU1 MUX_ALU1(
 );
 
 MUX_ALU2 MUX_ALU2(
-    .ALUSrc     (ForwardingUnit.MUXALU2control_o),
+    .ALUSrc_i   (ForwardingUnit.MUXALU2control_o),
     .data2_i    (IDEX_pipeline.data2_i),
     .dataWB_i   (WB_data),
     .dataFor_i  (MEM_ALUdata),
@@ -168,7 +168,7 @@ MUX_ALU2 MUX_ALU2(
 );
 
 ALU ALU(
-    .ALUOp      (IDEX_pipeline.EX_o)
+    .ALUOp_i    (IDEX_pipeline.EX_o)
     .data1_i    (MUX_ALU1.data1_o),
     .data2_i    (EX_MUXALUdata2),
     .data_o     (),
@@ -203,8 +203,8 @@ EXMEM_pipeline EXMEM_pipeline(
 );
 
 DataMemory DataMemory(
-    .MemRead        (MEM_M[1])
-    .MemWrite       (MEM_M[0]),
+    .MemRead_i      (MEM_M[1])
+    .MemWrite_i     (MEM_M[0]),
     .ALUdata_i      (MEM_ALUdata),
     .MUXALUdata2_i  (EXMEM_pipeline.MUXALUdata2_o),
     .readData_o     ()
