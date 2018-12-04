@@ -9,8 +9,8 @@ input   clk_i;
 input   start_i;
 
 wire    [31:0]  IF_instaddr;
-wire    [31:0]  ID_instaddr, ID_inst, ID_signExtend, ID_data1, ID_data2;
-wire    [1:0]   EX_M;
+wire    [31:0]  ID_inst, ID_signExtend, ID_data1, ID_data2;
+wire    [1:0]   EX_M, EX_EX;
 wire    [31:0]  EX_inst, EX_MUXALUdata2;
 wire    [1:0]   MEM_WB;
 wire    [1:0]   MEM_M;
@@ -53,7 +53,7 @@ IFID_pipeline IFID_pipeline(
     .controlflush_i (Control.IFID_flush),
     .instaddr_i     (PC.pc_o),
     .inst_i         (Instruction_Memory.inst_o),
-    .instaddr_o     (ID_instaddr),
+    .instaddr_o     (),
     .inst_o         (ID_inst)
 )
 
@@ -64,12 +64,11 @@ ImmGen ImmGen(
 
 Add_Branch Add_Branch(
     .data1_i    (ID_signExtend),
-    .data2_i    (ID_instaddr),
+    .data2_i    (IFID_pipeline.instaddr_o),
     .data_o     ()
 );
 
 Registers Registers(
-    .clk_i          (clk_i),
     .rs1_i          (ID_inst[19:25]),
     .rs2_i          (ID_inst[24:20]),
     .writeaddr_i    (WB_inst),
@@ -85,7 +84,7 @@ HazzardDetection HazzardDetection(
     .hazzardflush_i (EX_M),
     .PCflush_o      (),
     .IFIDflush_o    (),
-    .MUXflush_o     (),
+    .IDflush_o     (),
     .mux8_o         (),
     .Flush_o        ()
 );
@@ -97,16 +96,15 @@ Control Control(
     .IFflush_o  (),
     .IDflush_o  (),
     .EXflush_o  (),
-    .MUXflush_o (),
+    .Branch_o   (),
     .WB_o       (),
     .M_o        (),
     .EX_o       (),
-    .Jump_o     (),
-    .Branch_o   ()
+    .Jump_o     ()
 );
 
 MUX_IDEX MUX_IDEX(
-    .hazzardflush_i (HazzardDetection.MUXflush_o),
+    .hazzardflush_i (HazzardDetection.IDflush_o),
     .IDflush_i      (Control.IDflush_o),
     .WB_i           (Control.WB_o),
     .M_i            (Control.M_o)
@@ -125,18 +123,18 @@ IDEX_pipeline IDEX_pipeline(
     .WB_i           (MUX_IDEX.WB_o),
     .M_i            (MUX_IDEX.M_o),
     .EX_i           (MUX_IDEX.EX_o),
-    .instaddr_i     (ID_instaddr),
     .data1_i        (ID_data1),
     .data2_i        (ID_data2),
-    .sign_Extend_i  (ID_signExtend),
+    .signExtend_i   (ID_signExtend),
     .rs1_i          (ID_inst[19:25]),
     .rs2_i          (ID_inst[24:20]),
     .inst_i         (ID_inst),
     .WB_o           (),
-    .M_o            (EX_M),
-    .EX_o           (),
+    .M_o            (),
+    .EX_o           (EX_EX),
     .data1_o        (),
     .data2_o        (),
+    .signExtend_o   (),
     .rs1_o          (),
     .rs2_o          (),
     .inst_o         (EX_inst)
@@ -145,38 +143,51 @@ IDEX_pipeline IDEX_pipeline(
 MUX_EXMEM1 MUX_EXMEM1(
     .control_i  (Control.EXflush_o),
     .WB_i       (IDEX_pipeline.WB_o),
-    .zero_i     (32'd0),
-    .WB_o       (),  
+    .zero_i     (2'd0),
+    .WB_o       ()
 );
 
 MUX_EXMEM2 MUX_EXMEM2(
     .control_i  (Control.EXflush_o),
-    .M_i        (EX_M),
-    .zero_i     (32'd0),
+    .M_i        (IDEX_pipeline.M_o),
+    .zero_i     (2'd0),
     .M_o        ()
 );
 
+MUX_ALUSrc  MUX_ALUSrc(
+    .data1_i    (IDEX_pipeline.data2_o),
+    .data2_i    (IDEX_pipeline.signExtend_o),
+    .ALUSrc_i   (EX_EX[0]),
+    .data_o     ()
+);
+
 MUX_ALU1 MUX_ALU1(
-    .ALUSrc_i   (ForwardingUnit.MUXALU1control_o),
-    .data1_i    (IDEX_pipeline.data1_i),
+    .ForwardA_i (ForwardingUnit.MUXALU1control_o),
+    .data1_i    (IDEX_pipeline.data1_o),
     .dataWB_i   (WB_data),
     .dataFor_i  (MEM_ALUdata),
-    .data1_o    (),
+    .data1_o    ()
 );
 
 MUX_ALU2 MUX_ALU2(
-    .ALUSrc_i   (ForwardingUnit.MUXALU2control_o),
-    .data2_i    (IDEX_pipeline.data2_i),
+    .ForwardB_i (ForwardingUnit.MUXALU2control_o),
+    .data2_i    (MUX_ALUSrc.data_o),
     .dataWB_i   (WB_data),
     .dataFor_i  (MEM_ALUdata),
-    .data2_o    (EX_MUXALUdata2),
+    .data2_o    (EX_MUXALUdata2)
+);
+
+ALU_Control ALU_Control(
+    .ALUOp_i    (EX_EX[2:1]),
+    .inst_i     (EX_inst),
+    .ALUCtr_o   ()
 );
 
 ALU ALU(
-    .ALUOp_i    (IDEX_pipeline.EX_o)
+    .ALUCtr_i   (ALU_Control.ALUCtr_o),
     .data1_i    (MUX_ALU1.data1_o),
     .data2_i    (EX_MUXALUdata2),
-    .data_o     (),
+    .data_o     ()
 );
 
 ForwardingUnit ForwardingUnit(
@@ -187,7 +198,7 @@ ForwardingUnit ForwardingUnit(
     .rs1_i              (ID_inst[19:15]),
     .rs2_i              (ID_inst[24:20]),
     .MUXALU1control_o   (),
-    .MUXALU2control_o   (),
+    .MUXALU2control_o   ()
 );
 
 /*------------ EX/MEM ------------*/

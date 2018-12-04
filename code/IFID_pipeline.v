@@ -16,8 +16,8 @@ output	reg	[31:0]	instaddr_o, inst_o;
 always @(posedge clk_i) begin
 	if (start_i) begin
 		if (hazzardflush_i || controlflush_i) begin
-			instaddr_o = 32'b0;
-			inst_o = 32'b0;
+			instaddr_o = 32'd0;
+			inst_o = 32'd0;
 		end
 		else begin	
 			instaddr_o = instaddr_i;
@@ -25,7 +25,7 @@ always @(posedge clk_i) begin
 		end
 	end
 	else begin
-		instaddr_o = 32'b0;
-		inst_o = 32'b0;
+		instaddr_o = 32'd0;
+		inst_o = 32'd0;
 	end
 end

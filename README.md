@@ -26,10 +26,12 @@ pipeline
     ├── ImmGem.v
     │
     ├── IDEX_pipeline.v
+    ├── MUX_ALUSrc.v
     ├── MUX_ALU1.v
     ├── MUX_ALU2.v
     ├── MUX_EXMEM1.v
     ├── MUX_EXMEM2.v
+    ├── ALU_Control.v
     ├── ALU.v
     ├── Forwarding.v
     │
