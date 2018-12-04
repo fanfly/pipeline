@@ -36,7 +36,7 @@ pipeline
     ├── Forwarding.v
     │
     ├── Pipeline_EXMEM.v
-    ├── DataMemory.v
+    ├── Data_Memory.v
     ├── Pipeline_MEMWB.v
     └── MUX_WB.v
 ```

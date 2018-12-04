@@ -218,12 +218,12 @@ Pipeline_EXMEM Pipeline_EXMEM(
     .inst_o         (MEM_inst)
 );
 
-DataMemory DataMemory(
+Data_Memory Data_Memory(
     .MemRead_i      (MEM_M[1])
     .MemWrite_i     (MEM_M[0]),
-    .ALUdata_i      (MEM_ALUdata),
-    .MUXALUdata2_i  (Pipeline_EXMEM.MUXALUdata2_o),
-    .readData_o     ()
+    .address_i      (MEM_ALUdata),
+    .data_i         (Pipeline_EXMEM.MUXALUdata2_o),
+    .data_o         ()
 );
 
 /*------------ MEM/WB ------------*/

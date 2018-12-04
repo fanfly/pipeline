@@ -16,7 +16,7 @@ always @(*) begin
 	end
 	else if (opcode == 7'b0100011) begin
 		//sw
-		data_o[4:0] = data_i[4:0];
+		data_o[4:0] = data_i[11:7];
 		data_o[11:5] = data_i[31:25];
 	end
 	else if (opcode == 7'b0000011) begin
