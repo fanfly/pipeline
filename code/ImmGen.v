@@ -25,10 +25,10 @@ always @(*) begin
 	end
 	else if (opcode == 7'b1100011) begin
 		//beq
-		data_o[4:1] = data_i[11:8];
-		data_o[10:5] = data_i[30:25];
-		data_o[11] = data_i[7];
-		data_o[12] = data_i[31];
+		data_o[3:0] = data_i[11:8];
+		data_o[9:4] = data_i[30:25];
+		data_o[10] = data_i[7];
+		data_o[11] = data_i[31];
 	end
 end
 

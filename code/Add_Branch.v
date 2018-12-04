@@ -5,8 +5,10 @@ module Add_Branch(
 );
 
 input	[31:0]	data1_i, data2_i;
-output	[31:0]	data_o;
+output	reg	[31:0]	data_o;
 
-assign data_o = (data1_i<<1) + data2_i;
+always @(*) begin
+	data_o = (data1_i << 1) + data2_i;
+end
 
 endmodule
