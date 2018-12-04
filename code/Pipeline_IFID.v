@@ -1,4 +1,4 @@
-module IFID_pipeline(
+module Pipeline_IFID(
     clk_i,
     start_i,
     hazzardflush_i,

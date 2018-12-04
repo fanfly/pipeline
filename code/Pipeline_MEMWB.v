@@ -1,4 +1,4 @@
-module MEMWB_pipeline(
+module Pipeline_MEMWB(
 	clk_i,
     start_i,
     WB_i,

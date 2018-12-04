@@ -1,4 +1,4 @@
-module IDEX_pipeline(
+module Pipeline_IDEX(
     clk_i,
     start_i,
     WB_i,

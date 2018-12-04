@@ -2,7 +2,7 @@
 
 ## Structure
 
-![pipeline](https://i.imgur.com/sd53lVp.jpg)
+![pipeline](https://i.imgur.com/LiLYGCz.jpg)
 
 ```
 pipeline
@@ -17,7 +17,7 @@ pipeline
     ├── Add_PC.v
     ├── Instruction_memory.v
     │
-    ├── IFID_pipeline.v
+    ├── Pipeline_IFID.v
     ├── HazzardDetection.v
     ├── Control.v
     ├── MUX_IDEX.v
@@ -25,7 +25,7 @@ pipeline
     ├── Register.v
     ├── ImmGem.v
     │
-    ├── IDEX_pipeline.v
+    ├── Pipeline_IDEX.v
     ├── MUX_ALUSrc.v
     ├── MUX_ALU1.v
     ├── MUX_ALU2.v
@@ -35,9 +35,9 @@ pipeline
     ├── ALU.v
     ├── Forwarding.v
     │
-    ├── EXMEM_pipeline.v
+    ├── Pipeline_EXMEM.v
     ├── DataMemory.v
-    ├── MEMWB_pipeline.v
+    ├── Pipeline_MEMWB.v
     └── MUX_WB.v
 ```
 

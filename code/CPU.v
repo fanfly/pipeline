@@ -46,7 +46,7 @@ Instruction_Memory Instruction_Memory(
 
 /*------------ IF/ID ------------*/
 
-IFID_pipeline IFID_pipeline(
+Pipeline_IFID Pipeline_IFID(
     .clk_i          (clk_i),
     .start_i        (start_i),
     .hazzardflush_i (HazzardDetection.IFIDflush_o),
@@ -58,13 +58,13 @@ IFID_pipeline IFID_pipeline(
 )
 
 ImmGen ImmGen(
-    .data_i     (IFID_pipeline.inst_o),
+    .data_i     (Pipeline_IFID.inst_o),
     .data_o     (ID_signExtend)
 );
 
 Add_Branch Add_Branch(
     .data1_i    (ID_signExtend),
-    .data2_i    (IFID_pipeline.instaddr_o),
+    .data2_i    (Pipeline_IFID.instaddr_o),
     .data_o     ()
 );
 
@@ -117,7 +117,7 @@ MUX_IDEX MUX_IDEX(
 
 /*------------ ID/EX ------------*/
 
-IDEX_pipeline IDEX_pipeline(
+Pipeline_IDEX Pipeline_IDEX(
     .clk_i          (clk_i),
     .start_i        (start_i),
     .WB_i           (MUX_IDEX.WB_o),
@@ -142,28 +142,28 @@ IDEX_pipeline IDEX_pipeline(
 
 MUX_EXMEM1 MUX_EXMEM1(
     .control_i  (Control.EXflush_o),
-    .WB_i       (IDEX_pipeline.WB_o),
+    .WB_i       (Pipeline_IDEX.WB_o),
     .zero_i     (2'd0),
     .WB_o       ()
 );
 
 MUX_EXMEM2 MUX_EXMEM2(
     .control_i  (Control.EXflush_o),
-    .M_i        (IDEX_pipeline.M_o),
+    .M_i        (Pipeline_IDEX.M_o),
     .zero_i     (2'd0),
     .M_o        ()
 );
 
 MUX_ALUSrc  MUX_ALUSrc(
-    .data1_i    (IDEX_pipeline.data2_o),
-    .data2_i    (IDEX_pipeline.signExtend_o),
+    .data1_i    (Pipeline_IDEX.data2_o),
+    .data2_i    (Pipeline_IDEX.signExtend_o),
     .ALUSrc_i   (EX_EX[0]),
     .data_o     ()
 );
 
 MUX_ALU1 MUX_ALU1(
     .ForwardA_i (ForwardingUnit.MUXALU1control_o),
-    .data1_i    (IDEX_pipeline.data1_o),
+    .data1_i    (Pipeline_IDEX.data1_o),
     .dataWB_i   (WB_data),
     .dataFor_i  (MEM_ALUdata),
     .data1_o    ()
@@ -203,7 +203,7 @@ ForwardingUnit ForwardingUnit(
 
 /*------------ EX/MEM ------------*/
 
-EXMEM_pipeline EXMEM_pipeline(
+Pipeline_EXMEM Pipeline_EXMEM(
     .clk_i          (clk_i),
     .start_i        (start_i),
     .WB_i           (MUX_EXMEM1.WB_o),
@@ -222,13 +222,13 @@ DataMemory DataMemory(
     .MemRead_i      (MEM_M[1])
     .MemWrite_i     (MEM_M[0]),
     .ALUdata_i      (MEM_ALUdata),
-    .MUXALUdata2_i  (EXMEM_pipeline.MUXALUdata2_o),
+    .MUXALUdata2_i  (Pipeline_EXMEM.MUXALUdata2_o),
     .readData_o     ()
 );
 
 /*------------ MEM/WB ------------*/
 
-MEMWB_pipeline MEMWB_pipeline(
+Pipeline_MEMWB Pipeline_MEMWB(
     .clk_i          (clk_i),
     .start_i        (start_i),
     .WB_i           (MEM_WB),
@@ -243,8 +243,8 @@ MEMWB_pipeline MEMWB_pipeline(
 
 MUX_WB MUX_WB(
     .MemtoReg_i     (WB_WB[0]),
-    .data_i         (MEMWB_pipeline.data_o),
-    .ALUdata_i      (MEMWB_pipeline.ALUdata_o);
+    .data_i         (Pipeline_MEMWB.data_o),
+    .ALUdata_i      (Pipeline_MEMWB.ALUdata_o);
     .writedata_o    (WB_data)
 );
 

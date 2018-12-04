@@ -1,4 +1,4 @@
-module EXMEM_pipeline(
+module Pipeline_EXMEM(
     .clk_i,
     .start_i,
     .WB_i,
