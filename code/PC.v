@@ -19,7 +19,7 @@ always @(posedge clk_i) begin
 			pc_o = pc_i;
 		end
 		else begin
-			pc_o = 32'd0;
+			pc_o = pc_o;
 		end
 	end
 end

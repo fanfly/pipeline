@@ -1,9 +1,9 @@
 module Data_Memory(
-    .MemRead_i      (MEM_M[1])
-    .MemWrite_i     (MEM_M[0]),
-    .address_i      (MEM_ALUdata),
-    .data_i  		(Pipeline_EXMEM.MUXALUdata2_o),
-    .data_o     	()
+    .MemRead_i,
+    .MemWrite_i,
+    .address_i,
+    .data_i,
+    .data_o
 );
 
 input	MemRead_i, MemWrite_i;

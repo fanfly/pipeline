@@ -19,7 +19,7 @@ wire    [1:0]   WB_WB;
 wire    [31:0]  WB_data, WB_inst;
 
 MUX_PC MUX_PC(
-    .Branch_i   (Control.Branch_o),
+    .Branch_i   (Control.Jump_o),
     .pc0_i      (Add_PC.data_o),
     .pc1_i      (Add_Branch.data_o),
     .pc_o       ()
@@ -69,7 +69,7 @@ Add_Branch Add_Branch(
 );
 
 Registers Registers(
-    .rs1_i          (ID_inst[19:25]),
+    .rs1_i          (ID_inst[19:15]),
     .rs2_i          (ID_inst[24:20]),
     .writeaddr_i    (WB_inst),
     .writedata_i    (WB_data),
@@ -81,12 +81,10 @@ Registers Registers(
 HazzardDetection HazzardDetection(
     .IFIDinst_i     (ID_inst),
     .IDEXinst_i     (EX_inst),
-    .hazzardflush_i (EX_M),
+    .hazzardflush_i (EX_M[1]),
     .PCflush_o      (),
     .IFIDflush_o    (),
-    .IDflush_o     (),
-    .mux8_o         (),
-    .Flush_o        ()
+    .IDflush_o      ()
 );
 
 Control Control(
@@ -96,7 +94,6 @@ Control Control(
     .IFflush_o  (),
     .IDflush_o  (),
     .EXflush_o  (),
-    .Branch_o   (),
     .WB_o       (),
     .M_o        (),
     .EX_o       (),
@@ -126,7 +123,7 @@ Pipeline_IDEX Pipeline_IDEX(
     .data1_i        (ID_data1),
     .data2_i        (ID_data2),
     .signExtend_i   (ID_signExtend),
-    .rs1_i          (ID_inst[19:25]),
+    .rs1_i          (ID_inst[19:15]),
     .rs2_i          (ID_inst[24:20]),
     .inst_i         (ID_inst),
     .WB_o           (),
@@ -162,7 +159,7 @@ MUX_ALUSrc  MUX_ALUSrc(
 );
 
 MUX_ALU1 MUX_ALU1(
-    .ForwardA_i (ForwardingUnit.MUXALU1control_o),
+    .ForwardA_i (ForwardingUnit.ForwardA_o),
     .data1_i    (Pipeline_IDEX.data1_o),
     .dataWB_i   (WB_data),
     .dataFor_i  (MEM_ALUdata),
@@ -170,7 +167,7 @@ MUX_ALU1 MUX_ALU1(
 );
 
 MUX_ALU2 MUX_ALU2(
-    .ForwardB_i (ForwardingUnit.MUXALU2control_o),
+    .ForwardB_i (ForwardingUnit.ForwardB_o),
     .data2_i    (MUX_ALUSrc.data_o),
     .dataWB_i   (WB_data),
     .dataFor_i  (MEM_ALUdata),
@@ -195,10 +192,10 @@ ForwardingUnit ForwardingUnit(
     .EXMEMwb_i          (MEM_WB),
     .MEMWBinst_i        (WB_inst),
     .MEMWBwb_i          (WB_WB),
-    .rs1_i              (ID_inst[19:15]),
-    .rs2_i              (ID_inst[24:20]),
-    .MUXALU1control_o   (),
-    .MUXALU2control_o   ()
+    .rs1_i              (Pipeline_IDEX.rs1_o),
+    .rs2_i              (Pipeline_IDEX.rs2_o),
+    .ForwardA_o         (),
+    .ForwardB_o         ()
 );
 
 /*------------ EX/MEM ------------*/
