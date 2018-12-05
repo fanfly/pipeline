@@ -1,16 +1,19 @@
 module CPU
 (
     clk_i,
+    rst_i,
     start_i
 );
 
 // Ports
 input   clk_i;
 input   start_i;
+input   rst_i;
 
 wire    [31:0]  IF_instaddr;
 wire    [31:0]  ID_inst, ID_signExtend, ID_data1, ID_data2;
-wire    [1:0]   EX_M, EX_EX;
+wire    [1:0]   EX_M;
+wire    [2:0]   EX_EX;
 wire    [31:0]  EX_inst, EX_MUXALUdata2;
 wire    [1:0]   MEM_WB;
 wire    [1:0]   MEM_M;
@@ -28,6 +31,7 @@ MUX_PC MUX_PC(
 PC PC(
     .clk_i      (clk_i),
     .start_i    (start_i),
+    .rst_i      (rst_i),
     .pc_i       (MUX_PC.pc_o),
     .PCflush_i  (HazzardDetection.PCflush_o),
     .pc_o       (IF_instaddr)
@@ -48,17 +52,16 @@ Instruction_Memory Instruction_Memory(
 
 Pipeline_IFID Pipeline_IFID(
     .clk_i          (clk_i),
-    .start_i        (start_i),
     .hazzardflush_i (HazzardDetection.IFIDflush_o),
-    .controlflush_i (Control.IFID_flush),
+    .controlflush_i (Control.IFIDflush_o),
     .instaddr_i     (PC.pc_o),
     .inst_i         (Instruction_Memory.inst_o),
     .instaddr_o     (),
     .inst_o         (ID_inst)
-)
+);
 
 ImmGen ImmGen(
-    .data_i     (Pipeline_IFID.inst_o),
+    .data_i     (ID_inst),
     .data_o     (ID_signExtend)
 );
 
@@ -71,9 +74,9 @@ Add_Branch Add_Branch(
 Registers Registers(
     .rs1_i          (ID_inst[19:15]),
     .rs2_i          (ID_inst[24:20]),
-    .writeaddr_i    (WB_inst),
+    .writeaddr_i    (WB_inst[11:7]),
     .writedata_i    (WB_data),
-    .RegWrite_i     (WB_WB[1])
+    .RegWrite_i     (WB_WB[1]),
     .data1_o        (ID_data1),
     .data2_o        (ID_data2)
 );
@@ -81,32 +84,28 @@ Registers Registers(
 HazzardDetection HazzardDetection(
     .IFIDinst_i     (ID_inst),
     .IDEXinst_i     (EX_inst),
-    .hazzardflush_i (EX_M[1]),
+    .MemRead_i      (EX_M[1]),
     .PCflush_o      (),
     .IFIDflush_o    (),
     .IDflush_o      ()
 );
 
 Control Control(
-    .inst_i     (ID_inst),
-    .data1_i    (ID_data1),
-    .data2_i    (ID_data2),
-    .IFflush_o  (),
-    .IDflush_o  (),
-    .EXflush_o  (),
-    .WB_o       (),
-    .M_o        (),
-    .EX_o       (),
-    .Jump_o     ()
+    .inst_i         (ID_inst),
+    .data1_i        (ID_data1),
+    .data2_i        (ID_data2),
+    .IFIDflush_o    (),
+    .WB_o           (),
+    .M_o            (),
+    .EX_o           (),
+    .Jump_o         ()
 );
 
 MUX_IDEX MUX_IDEX(
     .hazzardflush_i (HazzardDetection.IDflush_o),
-    .IDflush_i      (Control.IDflush_o),
     .WB_i           (Control.WB_o),
-    .M_i            (Control.M_o)
-    .EX_i           (Control.EX_o)
-    .zero_i         (2'd0),
+    .M_i            (Control.M_o),
+    .EX_i           (Control.EX_o),
     .WB_o           (),
     .M_o            (),
     .EX_o           ()
@@ -116,7 +115,6 @@ MUX_IDEX MUX_IDEX(
 
 Pipeline_IDEX Pipeline_IDEX(
     .clk_i          (clk_i),
-    .start_i        (start_i),
     .WB_i           (MUX_IDEX.WB_o),
     .M_i            (MUX_IDEX.M_o),
     .EX_i           (MUX_IDEX.EX_o),
@@ -135,20 +133,6 @@ Pipeline_IDEX Pipeline_IDEX(
     .rs1_o          (),
     .rs2_o          (),
     .inst_o         (EX_inst)
-);
-
-MUX_EXMEM1 MUX_EXMEM1(
-    .control_i  (Control.EXflush_o),
-    .WB_i       (Pipeline_IDEX.WB_o),
-    .zero_i     (2'd0),
-    .WB_o       ()
-);
-
-MUX_EXMEM2 MUX_EXMEM2(
-    .control_i  (Control.EXflush_o),
-    .M_i        (Pipeline_IDEX.M_o),
-    .zero_i     (2'd0),
-    .M_o        ()
 );
 
 MUX_ALUSrc  MUX_ALUSrc(
@@ -202,9 +186,8 @@ ForwardingUnit ForwardingUnit(
 
 Pipeline_EXMEM Pipeline_EXMEM(
     .clk_i          (clk_i),
-    .start_i        (start_i),
-    .WB_i           (MUX_EXMEM1.WB_o),
-    .M_i            (MUX_EXMEM2.M_o),
+    .WB_i           (Pipeline_IDEX.WB_o),
+    .M_i            (Pipeline_IDEX.M_o),
     .ALUdata_i      (ALU.data_o),
     .MUXALUdata2_i  (EX_MUXALUdata2),
     .inst_i         (EX_inst),
@@ -216,7 +199,7 @@ Pipeline_EXMEM Pipeline_EXMEM(
 );
 
 Data_Memory Data_Memory(
-    .MemRead_i      (MEM_M[1])
+    .MemRead_i      (MEM_M[1]),
     .MemWrite_i     (MEM_M[0]),
     .address_i      (MEM_ALUdata),
     .data_i         (Pipeline_EXMEM.MUXALUdata2_o),
@@ -227,9 +210,8 @@ Data_Memory Data_Memory(
 
 Pipeline_MEMWB Pipeline_MEMWB(
     .clk_i          (clk_i),
-    .start_i        (start_i),
     .WB_i           (MEM_WB),
-    .data_i         (DataMemory.readData_o),
+    .data_i         (Data_Memory.data_o),
     .ALUdata_i      (MEM_ALUdata),
     .inst_i         (MEM_inst),
     .WB_o           (WB_WB),
@@ -241,7 +223,7 @@ Pipeline_MEMWB Pipeline_MEMWB(
 MUX_WB MUX_WB(
     .MemtoReg_i     (WB_WB[0]),
     .data_i         (Pipeline_MEMWB.data_o),
-    .ALUdata_i      (Pipeline_MEMWB.ALUdata_o);
+    .ALUdata_i      (Pipeline_MEMWB.ALUdata_o),
     .writedata_o    (WB_data)
 );
 

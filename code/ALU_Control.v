@@ -11,6 +11,9 @@ output	reg	[2:0]	ALUCtr_o;
 wire	[2:0]	funct3;
 wire	[6:0]	funct7;
 
+assign funct7 = inst_i[31:25];
+assign funct3 = inst_i[14:12];
+
 always @(*) begin
 	if (ALUOp_i == 2'b00) begin
 		ALUCtr_o = 3'b000;
@@ -19,8 +22,6 @@ always @(*) begin
 		ALUCtr_o = 3'b001;
 	end
 	else if (ALUOp_i == 2'b10) begin
-		funct7 = inst_i[31:25];
-		funct3 = inst_i[14:12];
 		if (funct7 == 7'b0000000 && funct3 == 3'b000 ) begin
 			ALUCtr_o = 3'b000;
 		end
@@ -41,3 +42,5 @@ always @(*) begin
 		ALUCtr_o = 3'b000;
 	end
 end
+
+endmodule

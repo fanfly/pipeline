@@ -11,10 +11,10 @@ output	reg 	[31:0]	writedata_o;
 
  always @(*) begin
  	if(MemtoReg_i) begin
- 		output = data_i;
+ 		writedata_o = data_i;
  	end
  	else begin
- 		output = ALUdata_i;
+ 		writedata_o = ALUdata_i;
  	end
  end
 

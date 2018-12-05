@@ -7,7 +7,7 @@ module MUX_EXMEM1(
 
 input	control_i;
 input	[1:0]	WB_i, zero_i;
-output	reg	[2:0]	WB_o;
+output	reg	[1:0]	WB_o;
 
 always @(*) begin
 	if (~control_i) begin
@@ -17,3 +17,5 @@ always @(*) begin
 		WB_o = zero_i;
 	end
 end
+
+endmodule

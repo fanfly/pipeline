@@ -7,7 +7,7 @@ module ALU(
 
 input	[2:0]	ALUCtr_i;
 input	[31:0]	data1_i, data2_i;
-output	[31:0]	data_o;
+output	reg	[31:0]	data_o;
 
 always @(*) begin
 	if (ALUCtr_i == 3'b000) begin
@@ -26,3 +26,5 @@ always @(*) begin
 		data_o = data1_i & data2_i;
 	end
 end
+
+endmodule

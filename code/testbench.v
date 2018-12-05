@@ -4,6 +4,7 @@ module TestBench;
 
 reg                Clk;
 reg                Start;
+reg                Reset;
 integer            i, outfile, counter;
 integer            stall, flush;
 
@@ -11,6 +12,7 @@ always #(`CYCLE_TIME/2) Clk = ~Clk;
 
 CPU CPU(
     .clk_i  (Clk),
+    .rst_i  (Reset),
     .start_i(Start)
 );
   
@@ -43,12 +45,12 @@ initial begin
     // Set Input n into data memory at 0x00
     CPU.Data_Memory.memory[0] = 8'h5;       // n = 5 for example
     
-    Clk = 1;
-    //Reset = 0;
+    Clk = 0;
+    Reset = 0;
     Start = 0;
     
     #(`CYCLE_TIME/4) 
-    //Reset = 1;
+    Reset = 1;
     Start = 1;
         
     
@@ -59,7 +61,7 @@ always@(posedge Clk) begin
         $stop;
 
     // put in your own signal to count stall and flush
-    if(CPU.HazzardDetection.IDflush_o == 1 && CPU.Control.Jump_o == 0)stall = stall + 1;
+    if((CPU.HazzardDetection.IFIDflush_o == 1  || CPU.Control.IFIDflush_o == 1 ) && CPU.Control.Jump_o == 0)stall = stall + 1;
     if(CPU.Control.Jump_o == 1)flush = flush + 1;  
 
     // print PC
@@ -85,7 +87,16 @@ always@(posedge Clk) begin
     $fdisplay(outfile, "Data Memory: 0x14 = %d", {CPU.Data_Memory.memory[23], CPU.Data_Memory.memory[22], CPU.Data_Memory.memory[21], CPU.Data_Memory.memory[20]});
     $fdisplay(outfile, "Data Memory: 0x18 = %d", {CPU.Data_Memory.memory[27], CPU.Data_Memory.memory[26], CPU.Data_Memory.memory[25], CPU.Data_Memory.memory[24]});
     $fdisplay(outfile, "Data Memory: 0x1c = %d", {CPU.Data_Memory.memory[31], CPU.Data_Memory.memory[30], CPU.Data_Memory.memory[29], CPU.Data_Memory.memory[28]});
-	
+    //$fdisplay(outfile, "%b", CPU.Instruction_Memory.inst_o);
+    //$fdisplay(outfile, "%b", CPU.Pipeline_IFID.inst_o);
+    //$fdisplay(outfile, "%b", CPU.Pipeline_IDEX.inst_o);
+    //$fdisplay(outfile, "%b", CPU.Pipeline_EXMEM.inst_o);
+    //$fdisplay(outfile, "%b", CPU.Pipeline_MEMWB.inst_o);
+    $fdisplay(outfile, "Register path : %d %d : %d %d => %d %d %d", CPU.Registers.rs1_i, CPU.Registers.rs2_i, CPU.Registers.data1_o, CPU.Registers.data2_o, CPU.ALU.data1_i, CPU.ALU.data2_i, CPU.ALU.data_o);
+    $fdisplay(outfile, "in ImmGen path: %d => %d", CPU.ImmGen.data_o, CPU.MUX_ALUSrc.data_o);
+    $fdisplay(outfile, "MUX_WB Units  : %d %d :(%d) %d", CPU.MUX_WB.ALUdata_i, CPU.MUX_WB.data_i, CPU.MUX_WB.MemtoReg_i, CPU.MUX_WB.writedata_o);
+    //$fdisplay(outfile, "%d %d %d %d\n",CPU.MUX_PC.pc0_i, CPU.MUX_PC.pc1_i, CPU.MUX_PC.Branch_i, CPU.MUX_PC.pc_o);
+
     $fdisplay(outfile, "\n");
     
     counter = counter + 1;

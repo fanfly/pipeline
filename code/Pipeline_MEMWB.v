@@ -1,6 +1,5 @@
 module Pipeline_MEMWB(
 	clk_i,
-    start_i,
     WB_i,
     data_i,
     ALUdata_i,
@@ -12,24 +11,26 @@ module Pipeline_MEMWB(
 );
 
 input			clk_i, start_i;
-input	[2:0]	WB_i;
+input	[1:0]	WB_i;
 input	[31:0]	data_i, ALUdata_i, inst_i;
-output	reg		[2:0]	WB_o;
+output	reg		[1:0]	WB_o;
 output	reg 	[31:0]	data_o, ALUdata_o, inst_o;
 
+reg     [1:0]   WB_buffer;
+reg     [31:0]  data_buffer, ALUdata_buffer, inst_buffer;
+
+always @(negedge clk_i) begin
+	WB_buffer <= WB_i;
+	data_buffer <= data_i;
+	ALUdata_buffer <= ALUdata_i;
+	inst_buffer <= inst_i;
+end
+
 always @(posedge clk_i) begin
-	if (start_i) begin
-		WB_o = WB_i;
-		data_o = data_i;
-		ALUdata_o = ALUdata_i;
-		inst_o = inst_i;
-	end
-	else begin
-		WB_o = 2'd0;
-		data_o = 32'd0;
-		ALUdata_o = 32'd0;
-		inst_o = 32'd0;
-	end
+    WB_o <= WB_buffer;
+    data_o <= data_buffer;
+    ALUdata_o <= ALUdata_buffer;
+    inst_o <= inst_buffer;
 end
 
 endmodule

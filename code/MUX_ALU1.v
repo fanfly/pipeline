@@ -1,9 +1,9 @@
 module MUX_ALU1(
-    .ForwardA_i,
-    .data1_i,
-    .dataWB_i,
-    .dataFor_i,
-    .data1_o
+    ForwardA_i,
+    data1_i,
+    dataWB_i,
+    dataFor_i,
+    data1_o
 );
 
 input	[1:0]	ForwardA_i;
@@ -21,3 +21,5 @@ always @(*) begin
 		data1_o = dataFor_i;
 	end
 end
+
+endmodule

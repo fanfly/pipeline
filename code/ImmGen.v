@@ -3,13 +3,14 @@ module ImmGen(
     data_o
 );
 
-input	reg	[31:0]	data_i;
-output	reg	[31:0]	data_o;
+input		[31:0]	data_i;
+output	reg	[31:0]	data_o = 32'd0;
 
 wire	[6:0]	opcode;
 
+assign opcode = data_i[6:0];
+
 always @(*) begin
-	data_o = 32'd0;
 	if (opcode == 7'b0010011) begin
 		//addi
 		data_o[11:0] = data_i[31:20];

@@ -7,7 +7,7 @@ module MUX_PC(
 
 input	Branch_i;
 input	[31:0]	pc0_i, pc1_i;
-output	[31:0]	pc_o;
+output	reg	[31:0]	pc_o;
 
 always @(*) begin
 	if (~Branch_i) begin
