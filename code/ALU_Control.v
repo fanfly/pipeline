@@ -35,7 +35,7 @@ always @(*) begin
 			ALUCtr_o = 3'b100;
 		end
 		else if (funct7 == 7'b0000000 && funct3 == 3'b111) begin
-			ALUCtr_o = 3'b111;
+			ALUCtr_o = 3'b101;
 		end
 	end
 	else if (ALUOp_i == 2'b11) begin

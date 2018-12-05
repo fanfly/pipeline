@@ -19,14 +19,14 @@ output	reg 	[31:0]	data_o, ALUdata_o, inst_o;
 reg     [1:0]   WB_buffer;
 reg     [31:0]  data_buffer, ALUdata_buffer, inst_buffer;
 
-always @(negedge clk_i) begin
+always @(posedge clk_i) begin
 	WB_buffer <= WB_i;
 	data_buffer <= data_i;
 	ALUdata_buffer <= ALUdata_i;
 	inst_buffer <= inst_i;
 end
 
-always @(posedge clk_i) begin
+always @(negedge clk_i) begin
     WB_o <= WB_buffer;
     data_o <= data_buffer;
     ALUdata_o <= ALUdata_buffer;

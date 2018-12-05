@@ -125,7 +125,7 @@ Pipeline_IDEX Pipeline_IDEX(
     .rs2_i          (ID_inst[24:20]),
     .inst_i         (ID_inst),
     .WB_o           (),
-    .M_o            (),
+    .M_o            (EX_M),
     .EX_o           (EX_EX),
     .data1_o        (),
     .data2_o        (),
@@ -133,13 +133,6 @@ Pipeline_IDEX Pipeline_IDEX(
     .rs1_o          (),
     .rs2_o          (),
     .inst_o         (EX_inst)
-);
-
-MUX_ALUSrc  MUX_ALUSrc(
-    .data1_i    (Pipeline_IDEX.data2_o),
-    .data2_i    (Pipeline_IDEX.signExtend_o),
-    .ALUSrc_i   (EX_EX[0]),
-    .data_o     ()
 );
 
 MUX_ALU1 MUX_ALU1(
@@ -152,10 +145,17 @@ MUX_ALU1 MUX_ALU1(
 
 MUX_ALU2 MUX_ALU2(
     .ForwardB_i (ForwardingUnit.ForwardB_o),
-    .data2_i    (MUX_ALUSrc.data_o),
+    .data2_i    (Pipeline_IDEX.data2_o),
     .dataWB_i   (WB_data),
     .dataFor_i  (MEM_ALUdata),
     .data2_o    (EX_MUXALUdata2)
+);
+
+MUX_ALUSrc  MUX_ALUSrc(
+    .data1_i    (EX_MUXALUdata2),
+    .data2_i    (Pipeline_IDEX.signExtend_o),
+    .ALUSrc_i   (EX_EX[0]),
+    .data_o     ()
 );
 
 ALU_Control ALU_Control(
@@ -167,7 +167,7 @@ ALU_Control ALU_Control(
 ALU ALU(
     .ALUCtr_i   (ALU_Control.ALUCtr_o),
     .data1_i    (MUX_ALU1.data1_o),
-    .data2_i    (EX_MUXALUdata2),
+    .data2_i    (MUX_ALUSrc.data_o),
     .data_o     ()
 );
 
@@ -187,7 +187,7 @@ ForwardingUnit ForwardingUnit(
 Pipeline_EXMEM Pipeline_EXMEM(
     .clk_i          (clk_i),
     .WB_i           (Pipeline_IDEX.WB_o),
-    .M_i            (Pipeline_IDEX.M_o),
+    .M_i            (EX_M),
     .ALUdata_i      (ALU.data_o),
     .MUXALUdata2_i  (EX_MUXALUdata2),
     .inst_i         (EX_inst),

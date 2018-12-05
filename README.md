@@ -2,7 +2,7 @@
 
 ## Structure
 
-![pipeline](https://i.imgur.com/LiLYGCz.jpg)
+![pipeline](https://i.imgur.com/zvyoi9B.jpg)
 
 ```
 pipeline
