@@ -4,7 +4,7 @@ module TestBench;
 
 reg                Clk;
 reg                Start;
-reg                Reset;
+//reg                Reset;
 integer            i, outfile, counter;
 integer            stall, flush;
 
@@ -12,7 +12,7 @@ always #(`CYCLE_TIME/2) Clk = ~Clk;
 
 CPU CPU(
     .clk_i  (Clk),
-    .rst_i  (Reset),
+    //.rst_i  (Reset),
     .start_i(Start)
 );
   
@@ -46,18 +46,18 @@ initial begin
     CPU.Data_Memory.memory[0] = 8'h5;       // n = 5 for example
     
     Clk = 0;
-    Reset = 0;
+    //Reset = 0;
     Start = 0;
     
     #(`CYCLE_TIME/4) 
-    Reset = 1;
+    //Reset = 1;
     Start = 1;
         
     
 end
   
 always@(posedge Clk) begin
-    if(counter == 30)    // stop after 30 cycles
+    if(counter == 19)    // stop after 30 cycles
         $stop;
 
     // put in your own signal to count stall and flush

@@ -1,13 +1,14 @@
 module PC(
     clk_i,
     start_i,
-    rst_i,
+    //rst_i,
     pc_i,
     PCflush_i,
     pc_o
 );
 
-input	clk_i, start_i, rst_i, PCflush_i;
+input	clk_i, start_i, PCflush_i;
+//input	rst_i;
 input	[31:0]	pc_i;
 output 	reg		[31:0]	pc_o;
 
@@ -17,8 +18,8 @@ always @(posedge clk_i) begin
 	pc_buffer <= pc_i;
 end
 
-always @(negedge clk_i or negedge rst_i) begin
-	if (~rst_i) begin
+always @(negedge clk_i) begin
+	if (~start_i) begin
 		pc_o <= 32'b0;
 	end
 	else begin

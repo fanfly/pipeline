@@ -1,14 +1,14 @@
 module CPU
 (
     clk_i,
-    rst_i,
+    //rst_i,
     start_i
 );
 
 // Ports
 input   clk_i;
 input   start_i;
-input   rst_i;
+//input   rst_i;
 
 wire    [31:0]  IF_instaddr;
 wire    [31:0]  ID_inst, ID_signExtend, ID_data1, ID_data2;
@@ -31,7 +31,7 @@ MUX_PC MUX_PC(
 PC PC(
     .clk_i      (clk_i),
     .start_i    (start_i),
-    .rst_i      (rst_i),
+    //.rst_i      (rst_i),
     .pc_i       (MUX_PC.pc_o),
     .PCflush_i  (HazzardDetection.PCflush_o),
     .pc_o       (IF_instaddr)
@@ -72,6 +72,7 @@ Add_Branch Add_Branch(
 );
 
 Registers Registers(
+    .clk_i          (clk_i),
     .rs1_i          (ID_inst[19:15]),
     .rs2_i          (ID_inst[24:20]),
     .writeaddr_i    (WB_inst[11:7]),
@@ -199,6 +200,7 @@ Pipeline_EXMEM Pipeline_EXMEM(
 );
 
 Data_Memory Data_Memory(
+    .clk_i          (clk_i),
     .MemRead_i      (MEM_M[1]),
     .MemWrite_i     (MEM_M[0]),
     .address_i      (MEM_ALUdata),
