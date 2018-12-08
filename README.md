@@ -1,8 +1,31 @@
 # pipeline
 
+## Execute
+
+- environment: linux
+
+- language: verilog
+
+- require package: iverilog
+
+- compile
+
+  ```bash
+  cd code
+  bash run.sh
+  ```
+
+- run
+
+  ```bash
+  vvp myCPU
+  ```
+
 ## Structure
 
-![pipeline](https://i.imgur.com/zvyoi9B.jpg)
+
+
+![pipeline](https://i.imgur.com/SlTw9U9.jpg)
 
 ```
 pipeline
