@@ -4,7 +4,6 @@ module TestBench;
 
 reg                Clk;
 reg                Start;
-//reg                Reset;
 integer            i, outfile, counter;
 integer            stall, flush;
 
@@ -12,7 +11,6 @@ always #(`CYCLE_TIME/2) Clk = ~Clk;
 
 CPU CPU(
     .clk_i  (Clk),
-    //.rst_i  (Reset),
     .start_i(Start)
 );
   
@@ -61,8 +59,8 @@ always@(posedge Clk) begin
         $stop;
 
     // put in your own signal to count stall and flush
-    if((CPU.HazzardDetection.IFIDflush_o == 1  || CPU.Control.IFIDflush_o == 1 ) && CPU.Control.Jump_o == 0)stall = stall + 1;
-    if(CPU.Control.Jump_o == 1)flush = flush + 1;  
+    if(CPU.Pipeline_IFID.hazzardflush_buffer == 1)stall = stall + 1;
+    if(CPU.Pipeline_IFID.controlflush_buffer == 1)flush = flush + 1;  
 
     // print PC
     $fdisplay(outfile, "cycle = %d, Start = %d, Stall = %d, Flush = %d\nPC = %d", counter, Start, stall, flush, CPU.PC.pc_o);
@@ -100,6 +98,8 @@ always@(posedge Clk) begin
     $fdisplay(outfile, "HazzardDetect : (ID) %d %d %d %d", CPU.HazzardDetection.MemRead_i, CPU.HazzardDetection.IDEX_rd, CPU.HazzardDetection.IFID_rs1, CPU.HazzardDetection.IFID_rs2);
     //$fdisplay(outfile, "%d %d %d %d\n",CPU.MUX_PC.pc0_i, CPU.MUX_PC.pc1_i, CPU.MUX_PC.Branch_i, CPU.MUX_PC.pc_o);
 */
+    //$fdisplay(outfile, "%d %d %d", CPU.Pipeline_IFID.hazzardflush_buffer, CPU.Pipeline_IFID.controlflush_buffer, CPU.Control.Jump_o);
+    
     $fdisplay(outfile, "\n");
     
     counter = counter + 1;

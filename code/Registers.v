@@ -20,7 +20,7 @@ reg 	[31:0]	register 	[0:31];
 assign data1_o = register[rs1_i];
 assign data2_o = register[rs2_i];
 
-always @(negedge clk_i) begin
+always @(posedge clk_i) begin
 	if(RegWrite_i && writeaddr_i != 5'b0)
 		register[writeaddr_i] <= writedata_i;
 end

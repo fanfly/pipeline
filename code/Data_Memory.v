@@ -14,7 +14,7 @@ output	reg	[31:0]	data_o;
 
 reg	[7:0]	memory 	[0:31];
 
-always @(negedge clk_i) begin
+always @(posedge clk_i) begin
 	if (MemRead_i) begin
 		data_o = memory[address_i];
 	end
