@@ -1,12 +1,28 @@
 # Computer Architecture Project 1
 
-## member and Teamwork
+## Member and Teamwork
 
 B05902003	李哲安:	EX/MEM/WB stages, Forwading
 
 B05902049	簡崇安:	IF/ID stages, Hazzard Detection
 
 B05902109	柯上優:	testbench, wire connection, report
+
+## Execute
+
+- environment: linux
+
+- language: verilog
+
+- require package: iverilog
+
+- compile and run
+
+  ```bash
+  cd code
+  bash run.sh
+  ```
+
 
 ## Implement pipeline CPU
 

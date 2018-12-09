@@ -8,17 +8,11 @@
 
 - require package: iverilog
 
-- compile
+- compile and run
 
   ```bash
   cd code
   bash run.sh
-  ```
-
-- run
-
-  ```bash
-  vvp myCPU
   ```
 
 ## Structure

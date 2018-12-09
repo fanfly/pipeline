@@ -1,4 +1,4 @@
-cycle =           0, Start = 1, Stall =           0, Flush =           0
+cycle =           0, Start = 0, Stall =           0, Flush =           0
 PC =          0
 Registers
 R0(r0) =          0, R8 (t0) =          0, R16(s0) =          0, R24(t8) =          0
