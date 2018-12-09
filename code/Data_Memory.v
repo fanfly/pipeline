@@ -18,6 +18,9 @@ always @(posedge clk_i) begin
 	if (MemRead_i) begin
 		data_o = memory[address_i];
 	end
+end
+
+always @(negedge clk_i) begin
 	if (MemWrite_i) begin
 		memory[address_i] = data_i;
 		data_o = data_i;
