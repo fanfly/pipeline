@@ -11,13 +11,17 @@ input   start_i;
 //input   rst_i;
 
 wire    [31:0]  IF_instaddr;
+
 wire    [31:0]  ID_inst, ID_signExtend, ID_data1, ID_data2;
+
 wire    [1:0]   EX_M;
 wire    [2:0]   EX_EX;
 wire    [31:0]  EX_inst, EX_MUXALUdata2;
+
 wire    [1:0]   MEM_WB;
 wire    [1:0]   MEM_M;
 wire    [31:0]  MEM_ALUdata, MEM_inst;
+
 wire    [1:0]   WB_WB;
 wire    [31:0]  WB_data, WB_inst;
 

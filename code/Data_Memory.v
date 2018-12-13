@@ -10,20 +10,15 @@ module Data_Memory(
 input	clk_i;
 input	MemRead_i, MemWrite_i;
 input	[31:0]	address_i, data_i;
-output	reg	[31:0]	data_o;
+output	[31:0]	data_o;
 
 reg	[7:0]	memory 	[0:31];
 
-always @(*) begin
-	if (MemRead_i) begin
-		data_o = memory[address_i];
-	end
-end
+assign data_o = (MemRead_i == 1'b1)? memory[address_i] : 32'b0;
 
-always @(negedge clk_i) begin
-	if (MemWrite_i) begin
+always @(posedge clk_i) begin
+	if (MemWrite_i == 1'b1) begin
 		memory[address_i] = data_i;
-		data_o = data_i;
 	end
 end
 

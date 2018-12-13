@@ -35,28 +35,29 @@ reg    [2:0]   EX_buffer;
 reg    [31:0]  data1_buffer, data2_buffer, signExtend_buffer, inst_buffer;
 reg    [4:0]   rs1_buffer, rs2_buffer;
 
-always @(posedge clk_i) begin
-    WB_buffer <= WB_i;
-    M_buffer <= M_i;
-    EX_buffer <= EX_i;
-    data1_buffer <= data1_i;
-    data2_buffer <= data2_i;
-    signExtend_buffer <= signExtend_i;
-    inst_buffer <= inst_i;
-    rs1_buffer <= rs1_i;
-    rs2_buffer <= rs2_i;
-end
-
-always @(negedge clk_i) begin
-    WB_o <= WB_buffer;
-    M_o <= M_buffer;
-    EX_o <= EX_buffer;
-    data1_o <= data1_buffer;
-    data2_o <= data2_buffer;
-    signExtend_o <= signExtend_buffer;
-    inst_o <= inst_buffer;
-    rs1_o <= rs1_buffer;
-    rs2_o <= rs2_buffer;
+always @(posedge clk_i or negedge clk_i) begin
+    if (clk_i) begin
+        WB_buffer <= WB_i;
+        M_buffer <= M_i;
+        EX_buffer <= EX_i;
+        data1_buffer <= data1_i;
+        data2_buffer <= data2_i;
+        signExtend_buffer <= signExtend_i;
+        inst_buffer <= inst_i;
+        rs1_buffer <= rs1_i;
+        rs2_buffer <= rs2_i;
+    end
+    else if (!clk_i) begin
+        WB_o <= WB_buffer;
+        M_o <= M_buffer;
+        EX_o <= EX_buffer;
+        data1_o <= data1_buffer;
+        data2_o <= data2_buffer;
+        signExtend_o <= signExtend_buffer;
+        inst_o <= inst_buffer;
+        rs1_o <= rs1_buffer;
+        rs2_o <= rs2_buffer;        
+    end
 end
 
 endmodule
