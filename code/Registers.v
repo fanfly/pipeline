@@ -21,20 +21,10 @@ reg 	[31:0]	register 	[0:31];
 assign data1_o = register[rs1_i];
 assign data2_o = register[rs2_i];
 
-//assign data1_o = (writeaddr_i == rs1_i) ? writedata_i: register[rs1_i];
-//assign data2_o = (writeaddr_i == rs2_i) ? writedata_i: register[rs2_i];
-
 always @(posedge clk_i) begin
-	if(RegWrite_i == 1) begin
+	if(RegWrite_i) begin
         register[writeaddr_i] = writedata_i;
     end
-    //data1_o = register[rs1_i];
-    //data2_o = register[rs2_i];
 end
-/*
-always @(*) begin
-    data1_o = register[rs1_i];
-    data2_o = register[rs2_i];
-end
-*/
+
 endmodule

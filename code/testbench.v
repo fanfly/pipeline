@@ -94,10 +94,10 @@ always@(posedge Clk) begin
     $fdisplay(outfile, "(IF) : %d %d : (%d) %d", CPU.MUX_PC.pc0_i, CPU.MUX_PC.pc1_i, CPU.MUX_PC.Branch_i, CPU.MUX_PC.pc_o);
     $fdisplay(outfile, "Register path : (ID) %d %d : %d %d => (EX) %d %d : %d", CPU.Registers.rs1_i, CPU.Registers.rs2_i, CPU.Registers.data1_o, CPU.Registers.data2_o, CPU.ALU.data1_i, CPU.ALU.data2_i, CPU.ALU.data_o);
     $fdisplay(outfile, "in ImmGen path: (ID) %d => (EX) %d : (%b) %d", CPU.ImmGen.data_o, CPU.MUX_ALUSrc.data_o, CPU.MUX_ALU2.ForwardB_i, CPU.ALU.data2_i);
-    $fdisplay(outfile, "MUX_WB Units  : (MEM) %d %d => (WB) %d %d :(%d) %d %d (%b)", CPU.MEM_ALUdata, CPU.Data_Memory.data_o, CPU.Pipeline_MEMWB.ALUdata_o, CPU.Pipeline_MEMWB.data_o, CPU.MUX_WB.MemtoReg_i, CPU.MUX_WB.writedata_o, CPU.Pipeline_MEMWB.inst_o, CPU.Pipeline_MEMWB.WB_o);
     $fdisplay(outfile, "HazzardDetect : (ID) %d %d %d %d", CPU.HazzardDetection.MemRead_i, CPU.HazzardDetection.IDEX_rd, CPU.HazzardDetection.IFID_rs1, CPU.HazzardDetection.IFID_rs2);
     //$fdisplay(outfile, "%d %d %d %d\n",CPU.MUX_PC.pc0_i, CPU.MUX_PC.pc1_i, CPU.MUX_PC.Branch_i, CPU.MUX_PC.pc_o);
 */
+    //$fdisplay(outfile, "MUX_WB Units  : (MEM) %d %d => (WB) %d %d :(%d) %d, reg addr = %d (%b)", CPU.MEM_ALUdata, CPU.Data_Memory.data_o, CPU.Pipeline_MEMWB.ALUdata_o, CPU.Pipeline_MEMWB.data_o, CPU.MUX_WB.MemtoReg_i, CPU.MUX_WB.writedata_o, CPU.Pipeline_MEMWB.inst_o[11:7], CPU.Pipeline_MEMWB.WB_o);
     //$fdisplay(outfile, "%d %d %d", CPU.Pipeline_IFID.hazzardflush_buffer, CPU.Pipeline_IFID.controlflush_buffer, CPU.Control.Jump_o);
     
     $fdisplay(outfile, "\n");
