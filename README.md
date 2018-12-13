@@ -19,7 +19,7 @@
 
 
 
-![pipeline](https://i.imgur.com/SlTw9U9.jpg)
+![datapath](datapath.png?raw=true)
 
 ```
 pipeline
