@@ -26,7 +26,7 @@ B05902109	柯上優:	testbench, wire connection, report
 
 ## Implement pipeline CPU
 
-![pipeline](https://i.imgur.com/SlTw9U9.jpg)
+![datapath](datapath.png?raw=true)
 
 - 這才是正確且完整的datapath，直到report完成的時間點(2018/12/5 23:00)，作業引導裡付上的圖片都有漏接線路與缺少元件，如：
   - WB/M/EX各自的尾端都沒接完，只停在pipeline裡面。
