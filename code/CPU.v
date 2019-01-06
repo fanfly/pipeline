@@ -1,236 +1,386 @@
 module CPU
 (
-    clk_i,
-    //rst_i,
-    start_i
+  input clock_i,
+  input flush_i
 );
 
-// Ports
-input   clk_i;
-input   start_i;
-//input   rst_i;
+/* Control Signal */
+wire clock;
+wire flush;
+wire stall;
+wire hazard;
+wire branch;
+wire [1:0] rs1_forward;
+wire [1:0] rs2_forward;
 
-wire    [31:0]  IF_instaddr;
+wire [2:0] control_EX_in_ID;
+wire [2:0] control_EX_in_EX;
 
-wire    [31:0]  ID_inst, ID_signExtend, ID_data1, ID_data2;
+wire [1:0] control_MEM_in_ID;
+wire [1:0] control_MEM_in_EX;
+wire [1:0] control_MEM_in_MEM;
 
-wire    [1:0]   EX_M;
-wire    [2:0]   EX_EX;
-wire    [31:0]  EX_inst, EX_MUXALUdata2;
+wire [1:0] control_WB_in_ID;
+wire [1:0] control_WB_in_EX;
+wire [1:0] control_WB_in_MEM;
+wire [1:0] control_WB_in_WB;
 
-wire    [1:0]   MEM_WB;
-wire    [1:0]   MEM_M;
-wire    [31:0]  MEM_ALUdata, MEM_inst;
+wire [2:0] ALU_control;
 
-wire    [1:0]   WB_WB;
-wire    [31:0]  WB_data, WB_inst;
+/* Data */
+wire [31:0] rs1_data_ID;
+wire [31:0] rs2_data_ID;
+wire [31:0] rs1_data_EX;
+wire [31:0] rs2_data_EX;
+wire [31:0] rs1_data_EX_1;
+wire [31:0] rs2_data_EX_1;
+wire [31:0] rs1_data_EX_2;
+wire [31:0] rs2_data_EX_2;
 
-MUX_PC MUX_PC(
-    .Branch_i   (Control.Jump_o),
-    .pc0_i      (Add_PC.data_o),
-    .pc1_i      (Add_Branch.data_o),
-    .pc_o       ()
+wire [31:0] immediate_ID;
+wire [31:0] immediate_EX;
+
+wire [31:0] ALU_data1;
+wire [31:0] ALU_data2;
+
+wire [31:0] result_EX;
+wire [31:0] result_MEM;
+wire [31:0] result_WB;
+
+wire [31:0] data_written_EX;
+wire [31:0] data_written_MEM;
+wire [31:0] data_read_MEM;
+wire [31:0] data_read_WB;
+
+wire [31:0] rd_data_WB;
+
+/* PC */
+wire [31:0] pc_added;
+wire [31:0] pc_after_branch;
+wire [31:0] pc_init;
+wire [31:0] pc_IF;
+wire [31:0] pc_ID;
+
+/* Instruction */
+wire [31:0] inst_IF;
+wire [31:0] inst_ID;
+wire [31:0] inst_EX;
+wire [31:0] inst_MEM;
+wire [31:0] inst_WB;
+
+/* Cache */
+wire cache_enable;
+wire cache_write;
+
+wire [4:0] cache_index_written;
+wire [4:0] cache_index_read;
+
+wire cache_valid_written;
+wire cache_valid_read;
+
+wire cache_dirty_written;
+wire cache_dirty_read;
+
+wire [21:0] cache_tag_written;
+wire [21:0] cache_tag_read;
+
+wire [255:0] cache_data_written;
+wire [255:0] cache_data_read;
+
+/* Memory */
+wire memory_enable;
+wire memory_write;
+wire memory_ack;
+
+wire [31:0] memory_addr;
+
+wire [255:0] memory_data_written;
+wire [255:0] memory_data_read;
+
+/* Connection */
+assign clock = clock_i;
+assign flush = flush_i;
+assign ALU_data1 = rs1_data_EX_2;
+assign data_written_EX = rs2_data_EX_2;
+
+/* IF: Instruction Fetch */
+MUX32 MUXPC
+(
+  .select_i(branch),
+  .data1_i(pc_after_branch),
+  .data2_i(pc_added),
+  .data_o(pc_init)
 );
 
-PC PC(
-    .clk_i      (clk_i),
-    .start_i    (start_i),
-    //.rst_i      (rst_i),
-    .pc_i       (MUX_PC.pc_o),
-    .PCflush_i  (HazzardDetection.PCflush_o),
-    .pc_o       (IF_instaddr)
+PC PC
+(
+  .clock_i(clock),
+  .flush_i(flush),
+  .enable_i(!stall && !hazard),
+  .pc_i(pc_init),
+  .pc_o(pc_IF)
 );
 
-Add_PC Add_PC(
-    .data1_i    (IF_instaddr),
-    .data2_i    (32'd4),
-    .data_o     ()
+Adder AdderCommon
+(
+  .data1_i(pc_IF),
+  .data2_i(32'd4),
+  .data_o(pc_added)
 );
 
-Instruction_Memory Instruction_Memory(
-    .instaddr_i     (IF_instaddr), 
-    .inst_o         ()
+InstructionMemory InstructionMemory
+(
+  .pc_i(pc_IF),
+  .inst_o(inst_IF)
 );
 
-/*------------ IF/ID ------------*/
-
-Pipeline_IFID Pipeline_IFID(
-    .clk_i          (clk_i),
-    .hazzardflush_i (HazzardDetection.IFIDflush_o),
-    .controlflush_i (Control.IFIDflush_o),
-    .instaddr_i     (PC.pc_o),
-    .inst_i         (Instruction_Memory.inst_o),
-    .instaddr_o     (),
-    .inst_o         (ID_inst)
+/* ID: Instruction Decode */
+IFID IFID
+(
+  .clock_i(clock),
+  .flush_i(flush || branch),
+  .enable_i(!stall && !hazard),
+  .pc_i(pc_IF),
+  .inst_i(inst_IF),
+  .pc_o(pc_ID),
+  .inst_o(inst_ID)
 );
 
-ImmGen ImmGen(
-    .data_i     (ID_inst),
-    .data_o     (ID_signExtend)
+Registers Registers
+(
+  .clock_i(clock),
+  .flush_i(flush),
+  .write_i(control_WB_in_WB[1]),
+  .rs1_addr_i(inst_ID[19:15]),
+  .rs2_addr_i(inst_ID[24:20]),
+  .rd_addr_i(inst_WB[11:7]),
+  .rd_data_i(rd_data_WB),
+  .rs1_data_o(rs1_data_ID),
+  .rs2_data_o(rs2_data_ID)
 );
 
-Add_Branch Add_Branch(
-    .data1_i    (ID_signExtend),
-    .data2_i    (Pipeline_IFID.instaddr_o),
-    .data_o     ()
+HazardDetection HazardDetection
+(
+  .rs1_addr_ID_i(inst_ID[19:15]),
+  .rs2_addr_ID_i(inst_ID[24:20]),
+  .rd_addr_EX_i(inst_EX[11:7]),
+  .memory_read_EX_i(control_MEM_in_EX[1]),
+  .hazard_o(hazard)
 );
 
-Registers Registers(
-    .clk_i          (clk_i),
-    .rs1_i          (ID_inst[19:15]),
-    .rs2_i          (ID_inst[24:20]),
-    .writeaddr_i    (WB_inst[11:7]),
-    .writedata_i    (WB_data),
-    .RegWrite_i     (WB_WB[1]),
-    .data1_o        (ID_data1),
-    .data2_o        (ID_data2)
+Control Control
+(
+  .clock_i(clock),
+  .flush_i(flush),
+  .enable_i(!stall),
+  .op_i(inst_ID[6:0]),
+  .rs1_data_i(rs1_data_ID),
+  .rs2_data_i(rs2_data_ID),
+  .control_EX_o(control_EX_in_ID),
+  .control_MEM_o(control_MEM_in_ID),
+  .control_WB_o(control_WB_in_ID),
+  .branch_o(branch)
 );
 
-HazzardDetection HazzardDetection(
-    .IFIDinst_i     (ID_inst),
-    .IDEXinst_i     (EX_inst),
-    .MemRead_i      (EX_M[1]),
-    .PCflush_o      (),
-    .IFIDflush_o    (),
-    .IDflush_o      ()
+Immediate Immediate
+(
+  .inst_i(inst_ID),
+  .immediate_o(immediate_ID)
 );
 
-Control Control(
-    .inst_i         (ID_inst),
-    .data1_i        (ID_data1),
-    .data2_i        (ID_data2),
-    .IFIDflush_o    (),
-    .WB_o           (),
-    .M_o            (),
-    .EX_o           (),
-    .Jump_o         ()
+Adder AdderBranch
+(
+  .data1_i(pc_ID),
+  .data2_i(immediate_ID << 1),
+  .data_o(pc_after_branch)
 );
 
-MUX_IDEX MUX_IDEX(
-    .hazzardflush_i (HazzardDetection.IDflush_o),
-    .WB_i           (Control.WB_o),
-    .M_i            (Control.M_o),
-    .EX_i           (Control.EX_o),
-    .WB_o           (),
-    .M_o            (),
-    .EX_o           ()
+/* EX: Execution */
+IDEX IDEX
+(
+  .clock_i(clock),
+  .flush_i(flush),
+  .enable_i(!stall),
+  .control_EX_i(control_EX_in_ID),
+  .control_MEM_i(control_MEM_in_ID),
+  .control_WB_i(control_WB_in_ID),
+  .immediate_i(immediate_ID),
+  .inst_i(inst_ID),
+  .rs1_data_i(rs1_data_ID),
+  .rs2_data_i(rs2_data_ID),
+  .control_EX_o(control_EX_in_EX),
+  .control_MEM_o(control_MEM_in_EX),
+  .control_WB_o(control_WB_in_EX),
+  .immediate_o(immediate_EX),
+  .inst_o(inst_EX),
+  .rs1_data_o(rs1_data_EX),
+  .rs2_data_o(rs2_data_EX)
 );
 
-/*------------ ID/EX ------------*/
-
-Pipeline_IDEX Pipeline_IDEX(
-    .clk_i          (clk_i),
-    .WB_i           (MUX_IDEX.WB_o),
-    .M_i            (MUX_IDEX.M_o),
-    .EX_i           (MUX_IDEX.EX_o),
-    .data1_i        (ID_data1),
-    .data2_i        (ID_data2),
-    .signExtend_i   (ID_signExtend),
-    .rs1_i          (ID_inst[19:15]),
-    .rs2_i          (ID_inst[24:20]),
-    .inst_i         (ID_inst),
-    .WB_o           (),
-    .M_o            (EX_M),
-    .EX_o           (EX_EX),
-    .data1_o        (),
-    .data2_o        (),
-    .signExtend_o   (),
-    .rs1_o          (),
-    .rs2_o          (),
-    .inst_o         (EX_inst)
+ALUControl ALUControl
+(
+  .ALU_op_i(control_EX_in_EX[2:1]),
+  .funct_i({inst_EX[31:25], inst_EX[14:12]}),
+  .ALU_control_o(ALU_control)
 );
 
-MUX_ALU1 MUX_ALU1(
-    .ForwardA_i (ForwardingUnit.ForwardA_o),
-    .data1_i    (Pipeline_IDEX.data1_o),
-    .dataWB_i   (WB_data),
-    .dataFor_i  (MEM_ALUdata),
-    .data1_o    ()
+ALU ALU
+(
+  .ALU_control_i(ALU_control),
+  .data1_i(ALU_data1),
+  .data2_i(ALU_data2),
+  .result_o(result_EX)
 );
 
-MUX_ALU2 MUX_ALU2(
-    .ForwardB_i (ForwardingUnit.ForwardB_o),
-    .data2_i    (Pipeline_IDEX.data2_o),
-    .dataWB_i   (WB_data),
-    .dataFor_i  (MEM_ALUdata),
-    .data2_o    (EX_MUXALUdata2)
+Forwarding Forwarding
+(
+  .control_WB_in_MEM_i(control_WB_in_MEM),
+  .control_WB_in_WB_i(control_WB_in_WB),
+  .rs1_addr_i(inst_EX[19:15]),
+  .rs2_addr_i(inst_EX[24:20]),
+  .rd_addr_MEM_i(inst_MEM[11:7]),
+  .rd_addr_WB_i(inst_WB[11:7]),
+  .rs1_forward_o(rs1_forward),
+  .rs2_forward_o(rs2_forward)
 );
 
-MUX_ALUSrc  MUX_ALUSrc(
-    .data1_i    (EX_MUXALUdata2),
-    .data2_i    (Pipeline_IDEX.signExtend_o),
-    .ALUSrc_i   (EX_EX[0]),
-    .data_o     ()
+MUX32 MUXForwardWB1
+(
+  .select_i(rs1_forward[0]),
+  .data1_i(result_WB),
+  .data2_i(rs1_data_EX),
+  .data_o(rs1_data_EX_1)
 );
 
-ALU_Control ALU_Control(
-    .ALUOp_i    (EX_EX[2:1]),
-    .inst_i     (EX_inst),
-    .ALUCtr_o   ()
+MUX32 MUXForwardMEM1
+(
+  .select_i(rs1_forward[1]),
+  .data1_i(result_MEM),
+  .data2_i(rs1_data_EX_1),
+  .data_o(rs1_data_EX_2)
 );
 
-ALU ALU(
-    .ALUCtr_i   (ALU_Control.ALUCtr_o),
-    .data1_i    (MUX_ALU1.data1_o),
-    .data2_i    (MUX_ALUSrc.data_o),
-    .data_o     ()
+MUX32 MUXForwardWB2
+(
+  .select_i(rs2_forward[0]),
+  .data1_i(result_WB),
+  .data2_i(rs2_data_EX),
+  .data_o(rs2_data_EX_1)
 );
 
-ForwardingUnit ForwardingUnit(
-    .EXMEMinst_i        (MEM_inst),
-    .EXMEMwb_i          (MEM_WB),
-    .MEMWBinst_i        (WB_inst),
-    .MEMWBwb_i          (WB_WB),
-    .rs1_i              (Pipeline_IDEX.rs1_o),
-    .rs2_i              (Pipeline_IDEX.rs2_o),
-    .ForwardA_o         (),
-    .ForwardB_o         ()
+MUX32 MUXForwardMEM2
+(
+  .select_i(rs2_forward[1]),
+  .data1_i(result_MEM),
+  .data2_i(rs2_data_EX_1),
+  .data_o(rs2_data_EX_2)
 );
 
-/*------------ EX/MEM ------------*/
-
-Pipeline_EXMEM Pipeline_EXMEM(
-    .clk_i          (clk_i),
-    .WB_i           (Pipeline_IDEX.WB_o),
-    .M_i            (EX_M),
-    .ALUdata_i      (ALU.data_o),
-    .MUXALUdata2_i  (EX_MUXALUdata2),
-    .inst_i         (EX_inst),
-    .WB_o           (MEM_WB),
-    .M_o            (MEM_M),
-    .ALUdata_o      (MEM_ALUdata),
-    .MUXALUdata2_o  (),
-    .inst_o         (MEM_inst)
+MUX32 MUXImmediate
+(
+  .select_i(control_EX_in_EX[0]),
+  .data1_i(immediate_EX),
+  .data2_i(rs2_data_EX_2),
+  .data_o(ALU_data2)
 );
 
-Data_Memory Data_Memory(
-    .clk_i          (clk_i),
-    .MemRead_i      (MEM_M[1]),
-    .MemWrite_i     (MEM_M[0]),
-    .address_i      (MEM_ALUdata),
-    .data_i         (Pipeline_EXMEM.MUXALUdata2_o),
-    .data_o         ()
+/* MEM: Memory */
+EXMEM EXMEM
+(
+  .clock_i(clock),
+  .flush_i(flush),
+  .enable_i(!stall),
+  .control_MEM_i(control_MEM_in_EX),
+  .control_WB_i(control_WB_in_EX),
+  .inst_i(inst_EX),
+  .result_i(result_EX),
+  .data_i(data_written_EX),
+  .control_MEM_o(control_MEM_in_MEM),
+  .control_WB_o(control_WB_in_MEM),
+  .inst_o(inst_MEM),
+  .result_o(result_MEM),
+  .data_o(data_written_MEM)
 );
 
-/*------------ MEM/WB ------------*/
-
-Pipeline_MEMWB Pipeline_MEMWB(
-    .clk_i          (clk_i),
-    .WB_i           (MEM_WB),
-    .data_i         (Data_Memory.data_o),
-    .ALUdata_i      (MEM_ALUdata),
-    .inst_i         (MEM_inst),
-    .WB_o           (WB_WB),
-    .data_o         (),
-    .ALUdata_o      (),
-    .inst_o         (WB_inst)
+CacheController CacheController
+(
+  .clock_i(clock),
+  .flush_i(flush),
+  .stall_o(stall),
+  .addr_i(result_MEM),
+  .data_i(data_written_MEM),
+  .read_i(control_MEM_in_MEM[1]),
+  .write_i(control_MEM_in_MEM[0]),
+  .data_o(data_read_MEM),
+  .cache_valid_i(cache_valid_read),
+  .cache_dirty_i(cache_dirty_read),
+  .cache_tag_i(cache_tag_read),
+  .cache_data_i(cache_data_read),
+  .cache_enable_o(cache_enable),
+  .cache_write_o(cache_write),
+  .cache_index_o(cache_index_written),
+  .cache_valid_o(cache_valid_written),
+  .cache_dirty_o(cache_dirty_written),
+  .cache_tag_o(cache_tag_written),
+  .cache_data_o(cache_data_written),
+  .memory_ack_i(memory_ack),
+  .memory_data_i(memory_data_read),
+  .memory_enable_o(memory_enable),
+  .memory_write_o(memory_write),
+  .memory_addr_o(memory_addr),
+  .memory_data_o(memory_data_written)
 );
 
-MUX_WB MUX_WB(
-    .MemtoReg_i     (WB_WB[0]),
-    .data_i         (Pipeline_MEMWB.data_o),
-    .ALUdata_i      (Pipeline_MEMWB.ALUdata_o),
-    .writedata_o    (WB_data)
+Cache Cache
+(
+  .clock_i(clock),
+  .enable_i(cache_enable),
+  .write_i(cache_write),
+  .index_i(cache_index_written),
+  .valid_i(cache_valid_written),
+  .dirty_i(cache_dirty_written),
+  .tag_i(cache_tag_written),
+  .data_i(cache_data_written),
+  .valid_o(cache_valid_read),
+  .dirty_o(cache_dirty_read),
+  .tag_o(cache_tag_read),
+  .data_o(cache_data_read)
+);
+
+DataMemory DataMemory
+(
+  .clock_i(clock),
+  .flush_i(flush),
+  .enable_i(memory_enable),
+  .write_i(memory_write),
+  .addr_i(memory_addr),
+  .data_i(memory_data_written),
+  .ack_o(memory_ack),
+  .data_o(memory_data_read)
+);
+
+/* WB: Write Back */
+MEMWB MEMWB
+(
+  .clock_i(clock),
+  .flush_i(flush),
+  .enable_i(!stall),
+  .control_WB_i(control_WB_in_MEM),
+  .inst_i(inst_MEM),
+  .result_i(result_MEM),
+  .data_i(data_read_MEM),
+  .control_WB_o(control_WB_in_WB),
+  .inst_o(inst_WB),
+  .result_o(result_WB),
+  .data_o(data_read_WB)
+);
+
+MUX32 MUXWB
+(
+  .select_i(control_WB_in_WB[0]),
+  .data1_i(data_read_WB),
+  .data2_i(result_WB),
+  .data_o(rd_data_WB)
 );
 
 endmodule

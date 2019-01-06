@@ -1,11 +1,12 @@
-module instruction_memory(addr_i,
-                          instr_o);
+module InstructionMemory
+(
+  input [31:0] pc_i,
+  output [31:0] inst_o
+);
 
-input [31:0] addr_i;
-output [31:0] instr_o;
+reg [31:0] inst [0:511];
+integer i;
 
-reg [31:0] memory [0:511];
-
-assign instr_o = memory[addr_i >> 2];
+assign inst_o = inst[pc_i >> 2];
 
 endmodule

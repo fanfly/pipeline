@@ -1,111 +1,134 @@
-`define CYCLE_TIME 50            
+`define CYCLE_TIME 50
 
 module TestBench;
 
-reg                Clk;
-reg                Start;
-integer            i, outfile, counter;
-integer            stall, flush;
+reg clock;
+reg flush;
 
-always #(`CYCLE_TIME/2) Clk = ~Clk;    
+integer i;
+integer counter;
 
-CPU CPU(
-    .clk_i  (Clk),
-    .start_i(Start)
+integer file1;
+integer file2;
+
+CPU CPU
+(
+  .clock_i(clock),
+  .flush_i(flush)
 );
-  
+
 initial begin
-    counter = 0;
-    stall = 0;
-    flush = 0;
-    
-    // initialize instruction memory
-    for(i=0; i<256; i=i+1) begin
-        CPU.Instruction_Memory.memory[i] = 32'b0;
-    end
-    
-    // initialize data memory
-    for(i=0; i<32; i=i+1) begin
-        CPU.Data_Memory.memory[i] = 8'b0;
-    end    
-        
-    // initialize Register File
-    for(i=0; i<32; i=i+1) begin
-        CPU.Registers.register[i] = 32'b0;
-    end
-    
-    // Load instructions into instruction memory
-    $readmemb("instruction.txt", CPU.Instruction_Memory.memory);
-    
-    // Open output file
-    outfile = $fopen("output.txt") | 1;
-    
-    // Set Input n into data memory at 0x00
-    CPU.Data_Memory.memory[0] = 8'h5;       // n = 5 for example
-    
-    Clk = 0;
-    //Reset = 0;
-    Start = 0;
-    
-    #(`CYCLE_TIME/4) 
-    //Reset = 1;
-    Start = 1;
-        
-    
-end
+  $dumpfile("record.vcd");
+  $dumpvars(0, TestBench);
+  for (i = 0; i < 512; i = i + 1) begin
+    CPU.InstructionMemory.inst[i] = 32'b0;
+  end
   
-always@(posedge Clk) begin
-    if(counter == 30)    // stop after 30 cycles
-        $stop;
-
-    // put in your own signal to count stall and flush
-    if(CPU.Pipeline_IFID.hazzardflush_buffer == 1)stall = stall + 1;
-    if(CPU.Pipeline_IFID.controlflush_buffer == 1)flush = flush + 1;  
-
-    // print PC
-    $fdisplay(outfile, "cycle = %d, Start = %d, Stall = %d, Flush = %d\nPC = %d", counter, Start, stall, flush, CPU.PC.pc_o);
-    
-    // print Registers
-    $fdisplay(outfile, "Registers");
-    $fdisplay(outfile, "R0(r0) = %d, R8 (t0) = %d, R16(s0) = %d, R24(t8) = %d", CPU.Registers.register[0], CPU.Registers.register[8] , CPU.Registers.register[16], CPU.Registers.register[24]);
-    $fdisplay(outfile, "R1(at) = %d, R9 (t1) = %d, R17(s1) = %d, R25(t9) = %d", CPU.Registers.register[1], CPU.Registers.register[9] , CPU.Registers.register[17], CPU.Registers.register[25]);
-    $fdisplay(outfile, "R2(v0) = %d, R10(t2) = %d, R18(s2) = %d, R26(k0) = %d", CPU.Registers.register[2], CPU.Registers.register[10], CPU.Registers.register[18], CPU.Registers.register[26]);
-    $fdisplay(outfile, "R3(v1) = %d, R11(t3) = %d, R19(s3) = %d, R27(k1) = %d", CPU.Registers.register[3], CPU.Registers.register[11], CPU.Registers.register[19], CPU.Registers.register[27]);
-    $fdisplay(outfile, "R4(a0) = %d, R12(t4) = %d, R20(s4) = %d, R28(gp) = %d", CPU.Registers.register[4], CPU.Registers.register[12], CPU.Registers.register[20], CPU.Registers.register[28]);
-    $fdisplay(outfile, "R5(a1) = %d, R13(t5) = %d, R21(s5) = %d, R29(sp) = %d", CPU.Registers.register[5], CPU.Registers.register[13], CPU.Registers.register[21], CPU.Registers.register[29]);
-    $fdisplay(outfile, "R6(a2) = %d, R14(t6) = %d, R22(s6) = %d, R30(s8) = %d", CPU.Registers.register[6], CPU.Registers.register[14], CPU.Registers.register[22], CPU.Registers.register[30]);
-    $fdisplay(outfile, "R7(a3) = %d, R15(t7) = %d, R23(s7) = %d, R31(ra) = %d", CPU.Registers.register[7], CPU.Registers.register[15], CPU.Registers.register[23], CPU.Registers.register[31]);
-
-    // print Data Memory
-    $fdisplay(outfile, "Data Memory: 0x00 = %d", {CPU.Data_Memory.memory[3] , CPU.Data_Memory.memory[2] , CPU.Data_Memory.memory[1] , CPU.Data_Memory.memory[0] });
-    $fdisplay(outfile, "Data Memory: 0x04 = %d", {CPU.Data_Memory.memory[7] , CPU.Data_Memory.memory[6] , CPU.Data_Memory.memory[5] , CPU.Data_Memory.memory[4] });
-    $fdisplay(outfile, "Data Memory: 0x08 = %d", {CPU.Data_Memory.memory[11], CPU.Data_Memory.memory[10], CPU.Data_Memory.memory[9] , CPU.Data_Memory.memory[8] });
-    $fdisplay(outfile, "Data Memory: 0x0c = %d", {CPU.Data_Memory.memory[15], CPU.Data_Memory.memory[14], CPU.Data_Memory.memory[13], CPU.Data_Memory.memory[12]});
-    $fdisplay(outfile, "Data Memory: 0x10 = %d", {CPU.Data_Memory.memory[19], CPU.Data_Memory.memory[18], CPU.Data_Memory.memory[17], CPU.Data_Memory.memory[16]});
-    $fdisplay(outfile, "Data Memory: 0x14 = %d", {CPU.Data_Memory.memory[23], CPU.Data_Memory.memory[22], CPU.Data_Memory.memory[21], CPU.Data_Memory.memory[20]});
-    $fdisplay(outfile, "Data Memory: 0x18 = %d", {CPU.Data_Memory.memory[27], CPU.Data_Memory.memory[26], CPU.Data_Memory.memory[25], CPU.Data_Memory.memory[24]});
-    $fdisplay(outfile, "Data Memory: 0x1c = %d", {CPU.Data_Memory.memory[31], CPU.Data_Memory.memory[30], CPU.Data_Memory.memory[29], CPU.Data_Memory.memory[28]});
-/*
-    $fdisplay(outfile, "IF: %b", CPU.Instruction_Memory.inst_o);
-    $fdisplay(outfile, "ID: %b", CPU.Pipeline_IFID.inst_o);
-    $fdisplay(outfile, "EXE:%b", CPU.Pipeline_IDEX.inst_o);
-    $fdisplay(outfile, "MEM:%b", CPU.Pipeline_EXMEM.inst_o);
-    $fdisplay(outfile, "WB: %b", CPU.Pipeline_MEMWB.inst_o);
-    $fdisplay(outfile, "(IF) : %d %d : (%d) %d", CPU.MUX_PC.pc0_i, CPU.MUX_PC.pc1_i, CPU.MUX_PC.Branch_i, CPU.MUX_PC.pc_o);
-    $fdisplay(outfile, "Register path : (ID) %d %d : %d %d => (EX) %d %d : %d", CPU.Registers.rs1_i, CPU.Registers.rs2_i, CPU.Registers.data1_o, CPU.Registers.data2_o, CPU.ALU.data1_i, CPU.ALU.data2_i, CPU.ALU.data_o);
-    $fdisplay(outfile, "in ImmGen path: (ID) %d => (EX) %d : (%b) %d", CPU.ImmGen.data_o, CPU.MUX_ALUSrc.data_o, CPU.MUX_ALU2.ForwardB_i, CPU.ALU.data2_i);
-    $fdisplay(outfile, "HazzardDetect : (ID) %d %d %d %d", CPU.HazzardDetection.MemRead_i, CPU.HazzardDetection.IDEX_rd, CPU.HazzardDetection.IFID_rs1, CPU.HazzardDetection.IFID_rs2);
-    //$fdisplay(outfile, "%d %d %d %d\n",CPU.MUX_PC.pc0_i, CPU.MUX_PC.pc1_i, CPU.MUX_PC.Branch_i, CPU.MUX_PC.pc_o);
-*/
-    //$fdisplay(outfile, "MUX_WB Units  : (MEM) %d %d => (WB) %d %d :(%d) %d, reg addr = %d (%b)", CPU.MEM_ALUdata, CPU.Data_Memory.data_o, CPU.Pipeline_MEMWB.ALUdata_o, CPU.Pipeline_MEMWB.data_o, CPU.MUX_WB.MemtoReg_i, CPU.MUX_WB.writedata_o, CPU.Pipeline_MEMWB.inst_o[11:7], CPU.Pipeline_MEMWB.WB_o);
-    //$fdisplay(outfile, "%d %d %d", CPU.Pipeline_IFID.hazzardflush_buffer, CPU.Pipeline_IFID.controlflush_buffer, CPU.Control.Jump_o);
-    
-    $fdisplay(outfile, "\n");
-    
-    counter = counter + 1;
-    
-      
+  for (i = 0; i < 512; i = i + 1) begin
+    CPU.DataMemory.memory[i] = 256'b0;
+  end
+  for (i = 0; i < 32; i = i + 1) begin
+    CPU.Cache.valid[i] = 1'b0;
+    CPU.Cache.dirty[i] = 1'b0;
+    CPU.Cache.tag[i] = 22'b0;
+    CPU.Cache.data[i] = 256'b0;
+  end
+  for (i = 0; i < 32; i = i + 1) begin
+    CPU.Registers.register[i] = 32'b0;
+  end
+  $readmemb("instruction.txt", CPU.InstructionMemory.inst);
+  file1 = $fopen("output.txt") | 1;
+  file2 = $fopen("cache.txt") | 1;
+  
+  counter <= 0;
+  
+  clock <= 1'b0;
+  flush <= 1'b1;
+  
+  #(`CYCLE_TIME / 4)
+  flush <= 1'b0;
 end
 
+always #(`CYCLE_TIME / 2) clock <= ~clock;
+
+always @(posedge clock) begin
+  if (counter == 150) begin
+    $fdisplay(file1, "Flush cache!\n");
+    for (i = 0; i < 32; i = i + 1) begin
+      CPU.DataMemory.memory[{CPU.Cache.tag[i], i}] = CPU.Cache.data[i];
+    end
+  end
+  if (counter > 150) begin
+    $finish;
+  end
+  $fdisplay(file1, "cycle = %d, Start = %b", counter, 1'b1);
+  $fdisplay(file1, "PC = %d", CPU.PC.pc_o);
   
+  $fdisplay(file1, "Registers");
+  $fdisplay(file1, "R0(r0) = %h, R8 (t0) = %h, R16(s0) = %h, R24(t8) = %h", CPU.Registers.register[0], CPU.Registers.register[8] , CPU.Registers.register[16], CPU.Registers.register[24]);
+	$fdisplay(file1, "R1(at) = %h, R9 (t1) = %h, R17(s1) = %h, R25(t9) = %h", CPU.Registers.register[1], CPU.Registers.register[9] , CPU.Registers.register[17], CPU.Registers.register[25]);
+	$fdisplay(file1, "R2(v0) = %h, R10(t2) = %h, R18(s2) = %h, R26(k0) = %h", CPU.Registers.register[2], CPU.Registers.register[10], CPU.Registers.register[18], CPU.Registers.register[26]);
+	$fdisplay(file1, "R3(v1) = %h, R11(t3) = %h, R19(s3) = %h, R27(k1) = %h", CPU.Registers.register[3], CPU.Registers.register[11], CPU.Registers.register[19], CPU.Registers.register[27]);
+	$fdisplay(file1, "R4(a0) = %h, R12(t4) = %h, R20(s4) = %h, R28(gp) = %h", CPU.Registers.register[4], CPU.Registers.register[12], CPU.Registers.register[20], CPU.Registers.register[28]);
+	$fdisplay(file1, "R5(a1) = %h, R13(t5) = %h, R21(s5) = %h, R29(sp) = %h", CPU.Registers.register[5], CPU.Registers.register[13], CPU.Registers.register[21], CPU.Registers.register[29]);
+	$fdisplay(file1, "R6(a2) = %h, R14(t6) = %h, R22(s6) = %h, R30(s8) = %h", CPU.Registers.register[6], CPU.Registers.register[14], CPU.Registers.register[22], CPU.Registers.register[30]);
+	$fdisplay(file1, "R7(a3) = %h, R15(t7) = %h, R23(s7) = %h, R31(ra) = %h", CPU.Registers.register[7], CPU.Registers.register[15], CPU.Registers.register[23], CPU.Registers.register[31]);
+	
+  $fdisplay(file1, "");
+  $fdisplay(file1, "Cache: 0x0000 = %h", CPU.Cache.data[0]);
+	$fdisplay(file1, "Cache: 0x0020 = %h", CPU.Cache.data[1]);
+	$fdisplay(file1, "Cache: 0x0040 = %h", CPU.Cache.data[2]);
+	$fdisplay(file1, "Cache: 0x0060 = %h", CPU.Cache.data[3]);
+	$fdisplay(file1, "Cache: 0x0080 = %h", CPU.Cache.data[4]);
+	$fdisplay(file1, "Cache: 0x00A0 = %h", CPU.Cache.data[5]);
+	$fdisplay(file1, "Cache: 0x00C0 = %h", CPU.Cache.data[6]);
+	$fdisplay(file1, "Cache: 0x00E0 = %h", CPU.Cache.data[7]);
+  $fdisplay(file1, "");
+  
+  $fdisplay(file1, "Data Memory: 0x0000 = %h", CPU.DataMemory.memory[0]);
+	$fdisplay(file1, "Data Memory: 0x0020 = %h", CPU.DataMemory.memory[1]);
+	$fdisplay(file1, "Data Memory: 0x0040 = %h", CPU.DataMemory.memory[2]);
+	$fdisplay(file1, "Data Memory: 0x0060 = %h", CPU.DataMemory.memory[3]);
+	$fdisplay(file1, "Data Memory: 0x0080 = %h", CPU.DataMemory.memory[4]);
+	$fdisplay(file1, "Data Memory: 0x00A0 = %h", CPU.DataMemory.memory[5]);
+	$fdisplay(file1, "Data Memory: 0x00C0 = %h", CPU.DataMemory.memory[6]);
+	$fdisplay(file1, "Data Memory: 0x00E0 = %h", CPU.DataMemory.memory[7]);
+	$fdisplay(file1, "Data Memory: 0x0400 = %h", CPU.DataMemory.memory[32]);
+	$fdisplay(file1, "");
+  $fdisplay(file1, "");
+  
+  if (CPU.CacheController.state == 3'h1) begin // check hit or miss
+    $fwrite(file2, "Cycle: %d, ", counter);
+    if (CPU.CacheController.hit) begin
+      if (CPU.CacheController.read) begin
+        $fwrite(file2, "Read Hit  , ");
+      end
+      else if (CPU.CacheController.write) begin
+        $fwrite(file2, "Write Hit , ");
+      end
+    end
+    else begin
+      if (CPU.CacheController.read) begin
+        $fwrite(file2, "Read Miss , ");
+      end
+      else if (CPU.CacheController.write) begin
+        $fwrite(file2, "Write Miss, ");
+      end
+    end
+    $fwrite(file2, "Address: %h, ", CPU.CacheController.addr);
+    if (CPU.CacheController.read) begin
+      $fwrite(file2, "Read Data : %h", CPU.CacheController.data);
+    end
+    else if (CPU.CacheController.write) begin
+      $fwrite(file2, "Write Data: %h", CPU.CacheController.data);
+    end
+    if (!CPU.CacheController.hit && CPU.CacheController.cache_dirty_i) begin
+      $fwrite(file2, " (Write Back!)");
+    end
+    $fwrite(file2, "\n");
+  end
+  counter = counter + 1;
+end
+
 endmodule
+
