@@ -68,6 +68,12 @@ wire [31:0] inst_EX;
 wire [31:0] inst_MEM;
 wire [31:0] inst_WB;
 
+wire [4:0] rd_addr_IF;
+wire [4:0] rd_addr_ID;
+wire [4:0] rd_addr_EX;
+wire [4:0] rd_addr_MEM;
+wire [4:0] rd_addr_WB;
+
 /* Cache */
 wire cache_enable;
 wire cache_write;
@@ -102,6 +108,12 @@ assign clock = clock_i;
 assign flush = flush_i;
 assign ALU_data1 = rs1_data_EX_2;
 assign data_written_EX = rs2_data_EX_2;
+
+assign rd_addr_IF = inst_IF[11:7];
+assign rd_addr_ID = inst_ID[11:7];
+assign rd_addr_EX = inst_EX[11:7];
+assign rd_addr_MEM = inst_MEM[11:7];
+assign rd_addr_WB = inst_WB[11:7];
 
 /* IF: Instruction Fetch */
 MUX32 MUXPC

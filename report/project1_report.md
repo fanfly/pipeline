@@ -60,7 +60,7 @@ B05902109	柯上優:	testbench, wire connection, report
 - 儘管現在的程式是對的，但是在某些instruction會發生「提前將register的內容更新，以致於前一個cycle一次改變兩個register內的值，後一個cycle的輸出值疑似沒改變」的狀況，但是最終結果是對的，僅限於「連續R-type instruction」的過程
   - 尚未解決，由於助教保證提前一個cycle輸出可以接受，所以便放心地繳交了。
 
-  ![datapath](datapath.png?raw=true)
+  ![datapath](../image/datapath.png?raw=true)
 
 - 這才是正確且完整的datapath，直到report完成的時間點(2018/12/5 23:00)，作業引導裡付上的圖片都有漏接線路與缺少元件，如：
   - WB/M/EX各自的尾端都沒接完，只停在pipeline裡面。

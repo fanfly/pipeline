@@ -18,6 +18,10 @@ reg [31:0] inst;
 reg [31:0] result;
 reg [31:0] data;
 
+reg [1:0] control_WB_buf;
+reg [31:0] inst_buf;
+reg [31:0] result_buf;
+
 assign control_WB_o = control_WB;
 assign inst_o = inst;
 assign result_o = result;
@@ -32,9 +36,12 @@ end
 
 always @(posedge clock_i) begin
   if (enable_i) begin
-    control_WB <= control_WB_i;
-    inst <= inst_i;
-    result <= result_i;
+    control_WB <= control_WB_buf;
+    inst <= inst_buf;
+    result <= result_buf;
+    control_WB_buf <= control_WB_i;
+    inst_buf <= inst_i;
+    result_buf <= result_i;
     data <= data_i;
   end
 end

@@ -73,7 +73,7 @@ always @(posedge clock) begin
 	$fdisplay(file1, "R5(a1) = %h, R13(t5) = %h, R21(s5) = %h, R29(sp) = %h", CPU.Registers.register[5], CPU.Registers.register[13], CPU.Registers.register[21], CPU.Registers.register[29]);
 	$fdisplay(file1, "R6(a2) = %h, R14(t6) = %h, R22(s6) = %h, R30(s8) = %h", CPU.Registers.register[6], CPU.Registers.register[14], CPU.Registers.register[22], CPU.Registers.register[30]);
 	$fdisplay(file1, "R7(a3) = %h, R15(t7) = %h, R23(s7) = %h, R31(ra) = %h", CPU.Registers.register[7], CPU.Registers.register[15], CPU.Registers.register[23], CPU.Registers.register[31]);
-	
+	/*
   $fdisplay(file1, "");
   $fdisplay(file1, "Cache: 0x0000 = %h", CPU.Cache.data[0]);
 	$fdisplay(file1, "Cache: 0x0020 = %h", CPU.Cache.data[1]);
@@ -84,7 +84,7 @@ always @(posedge clock) begin
 	$fdisplay(file1, "Cache: 0x00C0 = %h", CPU.Cache.data[6]);
 	$fdisplay(file1, "Cache: 0x00E0 = %h", CPU.Cache.data[7]);
   $fdisplay(file1, "");
-  
+  */
   $fdisplay(file1, "Data Memory: 0x0000 = %h", CPU.DataMemory.memory[0]);
 	$fdisplay(file1, "Data Memory: 0x0020 = %h", CPU.DataMemory.memory[1]);
 	$fdisplay(file1, "Data Memory: 0x0040 = %h", CPU.DataMemory.memory[2]);
