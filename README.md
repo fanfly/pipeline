@@ -19,7 +19,7 @@
 
 
 
-![datapath](datapath.png?raw=true)
+![datapath](image/datapath.png?raw=true)
 
 ```
 pipeline
